@@ -1,18 +1,32 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "frontend-slides",
-  "description": "Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files.",
+  "name": "parspec-design",
+  "description": "Parspec brand stack — three composable Claude Code skills that compile a single brand SSoT (design-model.yaml) into Parspec-branded slides, ICP-credible craft rules, and per-surface generation. Built for Construction Materials Distributors.",
   "owner": {
-    "name": "zarazhangrui",
-    "url": "https://github.com/zarazhangrui"
+    "name": "ejkaz",
+    "url": "https://github.com/ejkaz"
   },
   "plugins": [
     {
-      "name": "frontend-slides",
-      "description": "Zero-dependency HTML presentation generator with 12 curated visual themes, PPT conversion, and anti-AI-slop design philosophy.",
-      "source": "./plugins/frontend-slides",
+      "name": "parspec-design",
+      "description": "Brand SSoT skill. Maintains Parspec design-model.yaml (colors, typography, motion, voice) and generates bundled previews. Versioned via YAML frontmatter and git tags so brand evolution is mechanical, not manual.",
+      "source": "./plugins/parspec-design",
+      "category": "design-system",
+      "tags": ["brand", "design-system", "parspec", "tokens", "design-model"]
+    },
+    {
+      "name": "parspec-slides",
+      "description": "Slide generation skill. Reads design-model.yaml from parspec-design and emits zero-dependency HTML decks with Parspec brand applied. Forked from zarazhangrui/frontend-slides — preserves viewport invariants, density limits, PPT/PDF/Vercel pipeline.",
+      "source": "./plugins/parspec-slides",
       "category": "productivity",
-      "tags": ["presentations", "slides", "html", "design", "powerpoint"]
+      "tags": ["presentations", "slides", "html", "parspec", "powerpoint"]
+    },
+    {
+      "name": "parspec-craft",
+      "description": "Craft rules skill. Universal anti-AI-slop, color, typography rules + data-driven palette enforcement that reads avoid/primary_axis_preserved/typography from design-model.yaml. Lints any HTML against active brand version.",
+      "source": "./plugins/parspec-craft",
+      "category": "design-system",
+      "tags": ["lint", "craft", "anti-ai-slop", "brand-compliance", "parspec"]
     }
   ]
 }

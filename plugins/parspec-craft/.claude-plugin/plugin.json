@@ -1,0 +1,13 @@
+{
+  "name": "parspec-craft",
+  "version": "0.1.0",
+  "description": "Parspec craft rules — universal anti-AI-slop / color / typography / viewport rules + data-driven palette enforcement that reads avoid, primary_axis_preserved, and typography from design-model.yaml. Lints any HTML against the active Parspec brand version.",
+  "author": {
+    "name": "ejkaz",
+    "url": "https://github.com/ejkaz"
+  },
+  "homepage": "https://github.com/ejkaz/parspec-design",
+  "repository": "https://github.com/ejkaz/parspec-design",
+  "license": "MIT",
+  "keywords": ["parspec", "lint", "craft", "anti-ai-slop", "brand-compliance"]
+}

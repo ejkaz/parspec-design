@@ -1,0 +1,13 @@
+{
+  "name": "parspec-slides",
+  "version": "0.1.0",
+  "description": "Parspec slide generation — zero-dependency HTML decks with Parspec brand applied via design-model.yaml. Forked from zarazhangrui/frontend-slides; preserves viewport-fitting, density limits, PPT conversion, Vercel deploy, and PDF export.",
+  "author": {
+    "name": "ejkaz",
+    "url": "https://github.com/ejkaz"
+  },
+  "homepage": "https://github.com/ejkaz/parspec-design",
+  "repository": "https://github.com/ejkaz/parspec-design",
+  "license": "MIT",
+  "keywords": ["parspec", "presentations", "slides", "html", "powerpoint"]
+}

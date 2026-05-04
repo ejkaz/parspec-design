@@ -1,182 +1,138 @@
-# Frontend Slides
+# Parspec Design
 
-A Claude Code skill for creating stunning, animation-rich HTML presentations — from scratch or by converting PowerPoint files.
+A composable Claude Code plugin stack that applies Parspec brand consistently across slides today and additional surfaces tomorrow. One install for every Parspec employee; one `design-model.yaml` as the brand source of truth.
 
-## What This Does
+Built for **Construction Materials Distributors** — Sonepar, Wesco, Border States, Rexel, Graybar.
 
-**Frontend Slides** helps non-designers create beautiful web presentations without knowing CSS or JavaScript. It uses a "show, don't tell" approach: instead of asking you to describe your aesthetic preferences in words, it generates visual previews and lets you pick what you like.
+## What's in this repo
 
-Here is a deck about the skill, made through the skill:
+Three plugins shipped from one marketplace:
 
-https://github.com/user-attachments/assets/ef57333e-f879-432a-afb9-180388982478
+| Plugin | Job |
+|---|---|
+| **`parspec-design`** | Maintains `design-model.yaml` — the single file every other Parspec skill reads. Versioned via YAML frontmatter and git tags; rollback is one command. |
+| **`parspec-slides`** | Generates zero-dependency HTML decks with Parspec brand applied. Reads tokens from `parspec-design`. Forked from [`zarazhangrui/frontend-slides`](https://github.com/zarazhangrui/frontend-slides) — preserves viewport invariants, density limits, PPT/PDF/Vercel pipeline. |
+| **`parspec-craft`** | Lints HTML against Parspec brand rules. Two layers: universal anti-AI-slop / color / typography (in this skill) + data-driven palette enforcement that reads the active `design-model.yaml`. |
 
-### Key Features
+The `design-model.yaml` is the contract. Brand evolution = yaml diff + git tag. Downstream skills auto-adapt.
 
-- **Zero Dependencies** — Single HTML files with inline CSS/JS. No npm, no build tools, no frameworks.
-- **Visual Style Discovery** — Can't articulate design preferences? No problem. Pick from generated visual previews.
-- **PPT Conversion** — Convert existing PowerPoint files to web, preserving all images and content.
-- **Anti-AI-Slop** — Curated distinctive styles that avoid generic AI aesthetics (bye-bye, purple gradients on white).
-- **Production Quality** — Accessible, responsive, well-commented code you can customize.
-
-## Installation
-
-### Via Plugin Marketplace (Recommended)
-
-Install directly from Claude Code in two commands:
+## Install
 
 ```bash
-/plugin marketplace add zarazhangrui/frontend-slides
-/plugin install frontend-slides@frontend-slides
+/plugin marketplace add ejkaz/parspec-design
+/plugin install parspec-design@parspec-design
+/plugin install parspec-slides@parspec-design
+/plugin install parspec-craft@parspec-design
 ```
 
-Then use it by typing `/frontend-slides` in Claude Code.
+Then in any Claude Code session:
 
-### Manual Installation
-
-Copy the skill files to your Claude Code skills directory:
-
-```bash
-# Create the skill directory
-mkdir -p ~/.claude/skills/frontend-slides/scripts
-
-# Copy all files (or clone this repo directly)
-cp SKILL.md STYLE_PRESETS.md viewport-base.css html-template.md animation-patterns.md ~/.claude/skills/frontend-slides/
-cp scripts/extract-pptx.py ~/.claude/skills/frontend-slides/scripts/
-```
-
-Or clone directly:
-
-```bash
-git clone https://github.com/zarazhangrui/frontend-slides.git ~/.claude/skills/frontend-slides
-```
-
-Then use it by typing `/frontend-slides` in Claude Code.
-
-## Usage
-
-### Create a New Presentation
-
-```
-/frontend-slides
-
-> "I want to create a pitch deck for my AI startup"
-```
-
-The skill will:
-
-1. Ask about your content (slides, messages, images)
-2. Ask about the feeling you want (impressed? excited? calm?)
-3. Generate 3 visual style previews for you to compare
-4. Create the full presentation in your chosen style
-5. Open it in your browser
-
-### Convert a PowerPoint
-
-```
-/frontend-slides
-
-> "Convert my presentation.pptx to a web slideshow"
-```
-
-The skill will:
-
-1. Extract all text, images, and notes from your PPT
-2. Show you the extracted content for confirmation
-3. Let you pick a visual style
-4. Generate an HTML presentation with all your original assets
-
-## Included Styles
-
-### Dark Themes
-
-- **Bold Signal** — Confident, high-impact, vibrant card on dark
-- **Electric Studio** — Clean, professional, split-panel
-- **Creative Voltage** — Energetic, retro-modern, electric blue + neon
-- **Dark Botanical** — Elegant, sophisticated, warm accents
-
-### Light Themes
-
-- **Notebook Tabs** — Editorial, organized, paper with colorful tabs
-- **Pastel Geometry** — Friendly, approachable, vertical pills
-- **Split Pastel** — Playful, modern, two-color vertical split
-- **Vintage Editorial** — Witty, personality-driven, geometric shapes
-
-### Specialty
-
-- **Neon Cyber** — Futuristic, particle backgrounds, neon glow
-- **Terminal Green** — Developer-focused, hacker aesthetic
-- **Swiss Modern** — Minimal, Bauhaus-inspired, geometric
-- **Paper & Ink** — Literary, drop caps, pull quotes
+| You say | Skill activates |
+|---|---|
+| "Make a Q2 board update deck" | `parspec-slides` |
+| "Show me the current Parspec brand" | `parspec-design` |
+| "Lint this HTML for Parspec brand" | `parspec-craft` |
+| "Roll back to brand-2026-Q1-original" | `parspec-design` |
 
 ## Architecture
 
-This skill uses **progressive disclosure** — the main `SKILL.md` is a concise map (~180 lines), with supporting files loaded on-demand only when needed:
-
-| File                      | Purpose                        | Loaded When               |
-| ------------------------- | ------------------------------ | ------------------------- |
-| `SKILL.md`                | Core workflow and rules        | Always (skill invocation) |
-| `STYLE_PRESETS.md`        | 12 curated visual presets      | Phase 2 (style selection) |
-| `viewport-base.css`       | Mandatory responsive CSS       | Phase 3 (generation)      |
-| `html-template.md`        | HTML structure and JS features | Phase 3 (generation)      |
-| `animation-patterns.md`   | CSS/JS animation reference     | Phase 3 (generation)      |
-| `scripts/extract-pptx.py` | PPT content extraction         | Phase 4 (conversion)      |
-| `scripts/deploy.sh`       | Deploy to Vercel               | Phase 6 (sharing)         |
-| `scripts/export-pdf.sh`   | Export slides to PDF           | Phase 6 (sharing)         |
-
-This design follows [OpenAI's harness engineering](https://openai.com/index/harness-engineering/) principle: "give the agent a map, not a 1,000-page instruction manual."
-
-## Philosophy
-
-This skill was born from the belief that:
-
-1. **You don't need to be a designer to make beautiful things.** You just need to react to what you see.
-
-2. **Dependencies are debt.** A single HTML file will work in 10 years. A React project from 2019? Good luck.
-
-3. **Generic is forgettable.** Every presentation should feel custom-crafted, not template-generated.
-
-4. **Comments are kindness.** Code should explain itself to future-you (or anyone else who opens it).
-
-## Sharing Your Presentations
-
-After creating a presentation, the skill offers two ways to share it:
-
-### Deploy to a Live URL
-
-One command deploys your slides to a permanent, shareable URL that works on any device — phones, tablets, laptops:
-
-```bash
-bash scripts/deploy.sh ./my-deck/
-# or
-bash scripts/deploy.sh ./presentation.html
+```
+parspec-design/
+├── .claude-plugin/marketplace.json         declares 3 plugins
+├── plugins/
+│   ├── parspec-design/                     Brand SSoT
+│   │   └── skills/parspec-design/
+│   │       ├── SKILL.md                    inspect / evolve / roll back / regenerate previews
+│   │       ├── design-model.yaml           ★ active brand version (frontmatter + tokens + avoid + invariants)
+│   │       └── references/                 hue templates (hero-stage, icon-kits, preview templates)
+│   ├── parspec-slides/                     Slide generation
+│   │   └── skills/parspec-slides/
+│   │       ├── SKILL.md                    Phase 0–7 workflow (read design-model → generate → lint)
+│   │       ├── viewport-base.css           hard invariants (100vh, clamp, reduced-motion)
+│   │       ├── animation-patterns.md
+│   │       ├── html-template.md
+│   │       ├── assets/template.html        Parspec brand seed
+│   │       ├── references/
+│   │       │   ├── layouts.md              8 paste-ready Parspec slide layouts
+│   │       │   └── legacy-presets.md       12 non-brand styles (Mode D / --preset)
+│   │       └── scripts/                    extract-pptx.py · deploy.sh · export-pdf.sh
+│   └── parspec-craft/                      Lint
+│       └── skills/parspec-craft/
+│           ├── SKILL.md                    universal + data-driven workflow
+│           ├── anti-ai-slop.md             10 cardinal sins + soft tells
+│           ├── color.md                    contrast + palette discipline + ICP register
+│           └── typography.md               Montserrat-only + clamp() + ladder
+└── README.md
 ```
 
-Uses [Vercel](https://vercel.com) (free tier). The skill walks you through signup and login if it's your first time.
+## Locked primary axis
 
-### Export to PDF
+The immovable Parspec brand anchors. Any palette evolution may change secondaries / tints / motifs — but never these:
 
-Convert your slides to a PDF for email, Slack, Notion, or printing:
+| Token | Hex | Role |
+|---|---|---|
+| Parspec Black | `#0F0F0F` | Default backgrounds |
+| Charcoal | `#2E2E2E` | Layering / secondary surface |
+| Off-white | `#F2F2F2` | Document / text-heavy surfaces |
+| White | `#FFFFFF` | Text on dark |
+| Brand Orange | `#FFA72B` | Primary CTA monopoly |
+| Typography | **Montserrat** | All text — single family |
+
+Signature motifs: corner brackets (CAD viewfinder), quarter circles, single-color orange line illustrations on dark, yellow blurs over UI screenshots.
+
+## How to evolve the brand
+
+1. Edit `plugins/parspec-design/skills/parspec-design/design-model.yaml`
+2. Bump `meta.version` and `meta.brand_version`; set `meta.supersedes`
+3. Update `primitives.*`, `tokens.colors.*`, and `avoid:` list
+4. Commit + tag:
+   ```bash
+   git tag -a brand-2026-Q3-v1 -m "Q3 brand evolution: <rationale>"
+   git push origin main brand-2026-Q3-v1
+   ```
+5. Teammates run `/plugin update` — every downstream skill picks up the new tokens automatically
+
+## How to roll back
 
 ```bash
-bash scripts/export-pdf.sh ./my-deck/index.html
-bash scripts/export-pdf.sh ./presentation.html ./output.pdf
+git checkout brand-2026-Q1-original -- plugins/parspec-design/skills/parspec-design/design-model.yaml
 ```
 
-Uses [Playwright](https://playwright.dev) to screenshot each slide at 1920×1080 and combine into a PDF. Installs automatically if needed. Animations are not preserved (it's a static snapshot).
+Or pin a specific deck to a brand version: it's just `git checkout <tag> -- design-model.yaml` before generation.
+
+## Brand version history
+
+| Tag | Date | Notes |
+|---|---|---|
+| `brand-2026-Q1-original` | 2026-03 | Original brand from March 2026 PDF. Secondaries (Blueprint Blue, Violet, Deep Rose) and pastel tints flagged for evolution — see CEO proposal in [Parspec_Brand_Evolution](../Parspec_Brand_Evolution/Artifacts/CEO_Proposal_2026-05-04.pdf) |
+
+## Sharing decks
+
+Generated decks are single self-contained HTML files. Two share paths:
+
+```bash
+# Live URL via Vercel
+bash plugins/parspec-slides/skills/parspec-slides/scripts/deploy.sh ./my-deck.html
+
+# PDF export via Playwright
+bash plugins/parspec-slides/skills/parspec-slides/scripts/export-pdf.sh ./my-deck.html
+```
 
 ## Requirements
 
 - [Claude Code](https://claude.ai/claude-code) CLI
-- For PPT conversion: Python with `python-pptx` library
-- For URL deployment: Node.js + Vercel account (free)
+- For PPT conversion: Python with `python-pptx`
+- For URL deployment: Node.js + Vercel account (free tier)
 - For PDF export: Node.js (Playwright installs automatically)
 
 ## Credits
 
-Created by [@zarazhangrui](https://github.com/zarazhangrui) with Claude Code.
+Built on three excellent open-source skills:
 
-Inspired by the "Vibe Coding" philosophy — building beautiful things without being a traditional software engineer.
+- [`zarazhangrui/frontend-slides`](https://github.com/zarazhangrui/frontend-slides) — slide generation foundation, kept as the upstream of `parspec-slides`
+- [`dominikmartn/hue`](https://github.com/dominikmartn/hue) — design-model.yaml schema and brand-learning patterns, vendored selectively into `parspec-design`
+- [`nexu-io/open-design`](https://github.com/nexu-io/open-design) — skill + design-system + craft stacking pattern, anti-AI-slop rules adapted into `parspec-craft`
 
 ## License
 
-MIT — Use it, modify it, share it.
+MIT — same as the upstream skills it's built on.

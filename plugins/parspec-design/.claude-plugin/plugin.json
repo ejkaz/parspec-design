@@ -1,0 +1,13 @@
+{
+  "name": "parspec-design",
+  "version": "0.1.0",
+  "description": "Parspec brand SSoT — maintains design-model.yaml (the single file every other Parspec skill reads). Versioned via YAML frontmatter (version, brand_version, supersedes, updated_by) and git tags for rollback.",
+  "author": {
+    "name": "ejkaz",
+    "url": "https://github.com/ejkaz"
+  },
+  "homepage": "https://github.com/ejkaz/parspec-design",
+  "repository": "https://github.com/ejkaz/parspec-design",
+  "license": "MIT",
+  "keywords": ["parspec", "brand", "design-system", "design-model", "tokens"]
+}

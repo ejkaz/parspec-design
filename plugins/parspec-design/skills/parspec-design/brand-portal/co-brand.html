@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+    AUTO-GENERATED FROM design-model.yaml — DO NOT EDIT MANUALLY
+    Regenerate: python3 scripts/generate-brand-portal.py
+    Generated: 2026-05-04 19:46 UTC
+    design-model.yaml version: 1.1.0 · brand_version: 2026-Q1-original
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parspec Brand Portal — Co-brand Rules</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0F0F0F;
+  --bg-2: #1A1A1A;
+  --bg-3: #2E2E2E;
+  --fg: #F2F2F2;
+  --fg-muted: rgba(242,242,242,0.6);
+  --fg-dim: rgba(242,242,242,0.4);
+  --orange: #FFA72B;
+  --border: rgba(242,242,242,0.12);
+  --gap-sm: clamp(0.5rem, 1vw, 1rem);
+  --gap-md: clamp(1rem, 2vw, 2rem);
+  --gap-lg: clamp(1.5rem, 3vw, 3rem);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+  font-family: 'Montserrat', -apple-system, sans-serif; line-height: 1.5; }
+code { font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.9em;
+  background: rgba(255,167,43,0.1); padding: 0.1em 0.4em; border-radius: 3px;
+  color: var(--orange); }
+strong { font-weight: 700; }
+
+.portal-header { position: sticky; top: 0; background: var(--bg);
+  border-bottom: 1px solid var(--border); z-index: 10; padding: 1rem 0; }
+.portal-header-inner { max-width: 1200px; margin: 0 auto;
+  padding: 0 var(--gap-md); display: flex; justify-content: space-between;
+  align-items: center; gap: var(--gap-md); flex-wrap: wrap; }
+.portal-mark { display: flex; flex-direction: column; gap: 0.2rem; }
+.portal-mark strong { font-weight: 900; letter-spacing: 0.08em; font-size: 1.1rem; color: var(--orange); }
+.portal-meta { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--fg-muted); }
+.portal-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.portal-nav-item { color: var(--fg-muted); text-decoration: none;
+  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 0.4rem 0.8rem; border-radius: 3px;
+  border: 1px solid transparent; transition: all 0.15s ease; }
+.portal-nav-item:hover { color: var(--fg); border-color: var(--border); }
+.portal-nav-item.active { color: var(--orange); border-color: var(--orange); }
+
+.portal-main { max-width: 1200px; margin: 0 auto; padding: var(--gap-lg) var(--gap-md); }
+.page-title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800;
+  letter-spacing: -0.02em; margin: 0 0 var(--gap-md) 0; line-height: 1.05; }
+.page-lead { color: var(--fg-muted); font-size: 1.1rem; max-width: 65ch;
+  line-height: 1.5; margin-bottom: var(--gap-lg); }
+
+h2.section { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.015em;
+  margin: var(--gap-lg) 0 var(--gap-md) 0; padding-top: var(--gap-md);
+  border-top: 1px solid var(--border); }
+h3.subsection { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.005em;
+  margin: var(--gap-md) 0 var(--gap-sm) 0; }
+.eyebrow { font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+  font-weight: 700; color: var(--orange); margin-bottom: 0.5rem; }
+
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--gap-sm); margin-bottom: var(--gap-md); }
+.swatch { aspect-ratio: 1.6 / 1; border-radius: 4px; padding: 1rem;
+  display: flex; flex-direction: column; justify-content: space-between;
+  font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(0,0,0,0.06); }
+.swatch .swatch-name { font-weight: 700; font-size: 0.8rem; line-height: 1.15; }
+.swatch .swatch-hex { font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.7rem;
+  font-weight: 500; opacity: 0.85; padding: 0; background: transparent; color: inherit; }
+.swatch .swatch-role { font-size: 0.7rem; opacity: 0.7; line-height: 1.3; margin-top: 0.3rem; }
+
+.token-row { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(120px, 1fr) 2fr;
+  gap: var(--gap-md); padding: 0.7rem 0; border-bottom: 1px solid var(--border);
+  align-items: start; font-size: 0.9rem; }
+.token-row .role-name { font-weight: 700; }
+.token-row .role-ref { font-family: 'SF Mono', monospace; font-size: 0.85em;
+  color: var(--fg-muted); }
+.token-row .role-desc { color: var(--fg-muted); line-height: 1.45; }
+.token-chip { display: inline-block; width: 1em; height: 1em; vertical-align: middle;
+  border-radius: 2px; margin-right: 0.4em; border: 1px solid rgba(255,255,255,0.15); }
+
+.callout { border-left: 3px solid var(--orange); background: rgba(255,167,43,0.06);
+  padding: var(--gap-md); margin: var(--gap-md) 0; border-radius: 0 4px 4px 0; }
+.callout strong { color: var(--orange); }
+
+.dontpair { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--gap-sm); margin-top: var(--gap-sm); }
+.dontpair-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  padding: 0.8rem; border-radius: 4px; font-size: 0.85rem; }
+.dontpair-item .dp-color { display: inline-block; width: 1.4em; height: 1.4em;
+  border-radius: 3px; margin-right: 0.4em; vertical-align: middle;
+  border: 1px solid rgba(255,255,255,0.15); }
+.dontpair-item .dp-name { font-weight: 700; }
+.dontpair-item .dp-reason { color: var(--fg-muted); font-size: 0.8rem;
+  margin-top: 0.4rem; line-height: 1.4; }
+
+.surface-card { background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: 4px; padding: var(--gap-md); margin-bottom: var(--gap-sm); }
+.surface-card h3 { margin: 0 0 0.4rem 0; }
+.surface-card .surface-meta { font-family: 'SF Mono', monospace; font-size: 0.8rem;
+  color: var(--fg-muted); padding: 0; background: transparent; }
+.surface-card .surface-rationale { color: var(--fg-muted); font-size: 0.9rem;
+  line-height: 1.55; margin-top: 0.6rem; }
+
+.portal-footer { max-width: 1200px; margin: var(--gap-lg) auto 0;
+  padding: var(--gap-md); border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; gap: var(--gap-md);
+  font-size: 0.75rem; color: var(--fg-dim); flex-wrap: wrap; }
+
+@media (max-width: 600px) {
+  .portal-nav { width: 100%; justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: 0.2s !important; }
+}
+</style>
+</head>
+<body>
+<header class="portal-header">
+  <div class="portal-header-inner">
+    <div class="portal-mark">
+      <strong>PARSPEC</strong>
+      <span class="portal-meta">Brand Portal · v1.1.0 · 2026-Q1-original</span>
+    </div>
+    <nav class="portal-nav"><a class="portal-nav-item" href="index.html">Overview</a><a class="portal-nav-item" href="color.html">Color</a><a class="portal-nav-item" href="logo.html">Logo & Motifs</a><a class="portal-nav-item" href="typography.html">Typography</a><a class="portal-nav-item active" href="co-brand.html">Co-brand Rules</a></nav>
+  </div>
+</header>
+
+<main class="portal-main">
+  <h1 class="page-title">Co-brand Rules</h1>
+  
+<p class="page-lead">Two AE-readable rule cards an AE can use on a Tuesday at the booth without a designer in the room. Plus the 10-year lock commitment.</p>
+
+<h2 class="section">Card 01 — Co-brand with Sonepar / Wesco / Graybar</h2>
+<div class="callout">
+  <p style="margin:0; font-size:1.05rem; line-height:1.5;">
+    "In any artifact with a Sonepar logo, our orange CTA is visible above the fold and our Deep Spec Blue never sits within a thumb's width of their navy."
+  </p>
+</div>
+<p style="color:var(--fg-muted); font-size:0.9rem; margin-top:var(--gap-sm);">Borrowed from Bluebeam's partner-branding clear-space rule. AE-checkable on a phone. Solves both ΔE-collision risk (#0F2942 vs Sonepar Navy ~#0033A0) AND "looks like a knockoff" risk in one sentence.</p>
+
+<h2 class="section">Card 02 — Bake-off vs Procore</h2>
+<div class="callout">
+  <p style="margin:0; font-size:1.05rem; line-height:1.5;">
+    "More black, less blue. Brand Orange CTA on every action slide. Drawing-block header on every PDF."
+  </p>
+</div>
+<p style="color:var(--fg-muted); font-size:0.9rem; margin-top:var(--gap-sm);">Procore's hero color since 2023 is <code>#FF5200</code>. Steel Blue collisions are inevitable in the category. Differentiation is structural — fewer cool surfaces, more orange action signals, drawing-block as the literacy artifact Procore can't claim.</p>
+
+<h2 class="section">10-year lock commitment</h2>
+<div style="background:var(--orange); color:var(--bg); padding:var(--gap-lg); border-radius:4px;">
+  <div class="eyebrow" style="color:var(--bg); opacity:0.7;">10-Year Lock</div>
+  <h3 style="margin:0; color:var(--bg); font-size:1.5rem; line-height:1.15;">Last secondary palette refresh until 2032 or post-IPO, whichever comes second.</h3>
+  <p style="margin:0.6rem 0 0 0; color:var(--bg); opacity:0.85; font-size:0.9rem; line-height:1.5;">ServiceTitan held Titan Blue 8+ years through 700% revenue growth and an IPO without a typography commission. In distributor channels, refresh signals instability — a stable visual identity buys more credibility than any palette move.</p>
+</div>
+
+<h2 class="section">Deferred decisions</h2>
+<div class="surface-card">
+  <h3>Custom typography commission</h3>
+  <div class="surface-meta">Trigger: Series C close OR $50M ARR OR platform moment, whichever first.</div>
+  <p class="surface-rationale">Procore Sans came 2 years post-IPO, ~9 years after Series C. ServiceTitan still on commodity sans at IPO. Stays Montserrat.</p>
+</div>
+<div class="surface-card">
+  <h3>Full illustration system</h3>
+  <div class="surface-meta">Trigger: 2nd brand designer in seat OR international expansion (Sonepar EMEA/LATAM).</div>
+  <p class="surface-rationale">Drawing-block header is the single shipped motif now.</p>
+</div>
+<div class="surface-card">
+  <h3>Motion language doc</h3>
+  <div class="surface-meta">Trigger: first marketing video &gt; 30s OR first interactive product tour OR brand designer hire #2.</div>
+  <p class="surface-rationale">Static brand artifacts only now.</p>
+</div>
+
+</main>
+
+<footer class="portal-footer">
+  <div>Auto-generated from <code>design-model.yaml</code>. Manual edits not permitted.</div>
+  <div>Regenerate: <code>python3 scripts/generate-brand-portal.py</code></div>
+</footer>
+</body>
+</html>

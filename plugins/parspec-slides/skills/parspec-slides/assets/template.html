@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parspec Deck — Seed Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/*
+  PARSPEC SLIDE SEED — copy and fill.
+
+  AGENT INSTRUCTIONS:
+  1. Read viewport-base.css and paste its full contents below this comment block.
+  2. Read design-model.yaml and populate the :root block from token values.
+  3. Use references/layouts.md for paste-ready slide structures.
+  4. Preserve the locked primary axis (Black, Orange, Off-white, Charcoal, White, Montserrat).
+  5. Brand Orange CTA monopoly — only the primary action button uses it.
+*/
+
+/* ─── PASTE viewport-base.css HERE (full contents) ─── */
+
+/* ─── Primary axis (locked from design-model.yaml primary_axis_preserved) ─── */
+:root {
+    --parspec-black:  #0F0F0F;
+    --charcoal:       #2E2E2E;
+    --off-white:      #F2F2F2;
+    --white:          #FFFFFF;
+    --brand-orange:   #FFA72B;
+
+    /* Type scale — clamp() mandatory */
+    --display-size: clamp(2rem, 5.5vw, 5rem);
+    --h1-size:      clamp(1.75rem, 4.5vw, 4rem);
+    --h2-size:      clamp(1.25rem, 3vw, 2.5rem);
+    --h3-size:      clamp(1rem, 2vw, 1.5rem);
+    --body-size:    clamp(0.85rem, 1.4vw, 1.15rem);
+    --small-size:   clamp(0.7rem, 1vw, 0.9rem);
+    --eyebrow-size: clamp(0.65rem, 0.85vw, 0.8rem);
+
+    --gap-xs: clamp(0.25rem, 0.5vw, 0.5rem);
+    --gap-sm: clamp(0.5rem, 1vw, 1rem);
+    --gap-md: clamp(1rem, 2vw, 2rem);
+    --gap-lg: clamp(1.5rem, 3vw, 3rem);
+    --gap-xl: clamp(2rem, 4vw, 4rem);
+
+    /* Motion */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-fast:   150ms;
+    --duration-normal: 300ms;
+
+    /* Secondaries — populate from design-model.yaml tokens.colors.dark or .light.
+       AGENT: read the active design-model.yaml `avoid:` list and SKIP any flagged
+       secondaries when assigning. Brand v1 has flagged Blueprint Blue, Violet,
+       Deep Rose, and pastel tints — do not use those without explicit user override. */
+    /* --secondary-1: <hex>; */
+    /* --secondary-2: <hex>; */
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Montserrat', -apple-system, sans-serif;
+    background: var(--parspec-black);
+    color: var(--off-white);
+}
+
+/* ─── Slide chrome ─── */
+.slide {
+    padding: clamp(2rem, 5vw, 5rem);
+    box-sizing: border-box;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 800; line-height: 1.05; font-family: 'Montserrat', sans-serif; }
+h1 { font-size: var(--h1-size); letter-spacing: -0.02em; }
+h2 { font-size: var(--h2-size); letter-spacing: -0.015em; }
+h3 { font-size: var(--h3-size); letter-spacing: -0.01em; }
+p  { font-size: var(--body-size); line-height: 1.5; margin: 0; }
+
+.eyebrow { font-size: var(--eyebrow-size); letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; opacity: 0.65; margin-bottom: var(--gap-md); }
+.brand-orange { color: var(--brand-orange); }
+
+/* Corner brackets — signature motif */
+.bracket-tl, .bracket-tr, .bracket-bl, .bracket-br {
+    position: absolute;
+    width: clamp(20px, 2.5vw, 40px);
+    height: clamp(20px, 2.5vw, 40px);
+    border: 2px solid var(--brand-orange);
+    pointer-events: none;
+}
+.bracket-tl { top: clamp(1rem, 2vw, 2rem); left:  clamp(1rem, 2vw, 2rem); border-right: 0; border-bottom: 0; }
+.bracket-tr { top: clamp(1rem, 2vw, 2rem); right: clamp(1rem, 2vw, 2rem); border-left: 0;  border-bottom: 0; }
+.bracket-bl { bottom: clamp(1rem, 2vw, 2rem); left:  clamp(1rem, 2vw, 2rem); border-right: 0; border-top: 0; }
+.bracket-br { bottom: clamp(1rem, 2vw, 2rem); right: clamp(1rem, 2vw, 2rem); border-left: 0;  border-top: 0; }
+
+/* Buttons */
+.btn-primary {
+    background: var(--brand-orange);
+    color: var(--parspec-black);
+    padding: clamp(0.6rem, 1.2vw, 0.9rem) clamp(1.2rem, 2vw, 2rem);
+    border: 0;
+    border-radius: 4px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: var(--body-size);
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-out-expo);
+}
+.btn-primary:hover { background: #E58F00; }
+.btn-secondary {
+    background: transparent;
+    color: var(--off-white);
+    padding: clamp(0.6rem, 1.2vw, 0.9rem) clamp(1.2rem, 2vw, 2rem);
+    border: 1px solid var(--off-white);
+    border-radius: 4px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: var(--body-size);
+    cursor: pointer;
+}
+
+/* Slide header / footer */
+.slide-header, .slide-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--eyebrow-size);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    opacity: 0.6;
+}
+.slide-footer { margin-top: auto; padding-top: var(--gap-md); }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+    html { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 1 — TITLE (using L1 layout from references/layouts.md)
+     Replace placeholder content. Keep density limits.
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide title-slide">
+    <div class="bracket-tl"></div>
+    <div class="bracket-tr"></div>
+    <div class="bracket-bl"></div>
+    <div class="bracket-br"></div>
+
+    <div class="slide-header">
+        <div>PARSPEC · INTERNAL</div>
+        <div>YYYY-MM-DD</div>
+    </div>
+
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+        <div class="eyebrow brand-orange">{{Section eyebrow}}</div>
+        <h1 style="font-size: var(--display-size); margin-bottom: var(--gap-md);">
+            {{Heading line one.}}<br>
+            <span class="brand-orange">{{Heading line two.}}</span>
+        </h1>
+        <p style="font-size: var(--h3-size); opacity: 0.75; max-width: 60ch;">
+            {{One-sentence subtitle, ≤ 90 chars.}}
+        </p>
+    </div>
+
+    <div class="slide-footer">
+        <div>For: <span class="brand-orange">{{Audience}}</span></div>
+        <div>From: {{Author}}</div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     ADD MORE SLIDES — copy from references/layouts.md.
+     Each <section class="slide"> is a full viewport.
+     ═══════════════════════════════════════════════════════ -->
+
+</body>
+</html>
