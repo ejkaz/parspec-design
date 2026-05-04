@@ -5,13 +5,15 @@
 # ════════════════════════════════════════════════════════════════════
 
 meta:
-  version: "1.1.0"
-  brand_version: "2026-Q1-original"
-  source: "Parspec Brand Guidelines - March 2026 (1).pdf"
+  version: "2.0.0"
+  brand_version: "2026-Q3-v1"
+  source: "Parspec Brand v1 + BVIN slide 5 empirical evidence + 2-agent lock collaboration (Brand Marketer × Graphics Designer, May 2026)"
   updated: "2026-05-04"
   updated_by: "eric@parspec.io"
-  status: "original"
-  supersedes: "1.0.0"
+  status: "ratified"
+  ratified: "2026-05-04"
+  ratified_by: "eric@parspec.io"
+  supersedes: "1.2.0"
   notes: |
     v1.0.0 — Initial brand v1 captured from the March 2026 Parspec Brand Guide PDF.
     Secondaries (Blueprint Blue #6270F2, Violet #8F6EF0, Deep Rose #BE123C) and
@@ -19,18 +21,71 @@ meta:
     brands use this register.
 
     v1.1.0 — Architectural additions from 3-round design review (no brand-color
-    change yet — that's v2.0.0 post-CEO):
+    change yet):
       - `roles:` block — two-tier token model (primitives → roles → semantic).
         Polaris/Carbon precedent. Every role token references exactly one primitive.
         Compile-time CTA monopoly enforcement instead of designer judgment.
       - `surfaces:` block — codifies brand-artifacts=dark, product-ui=light,
         documents=light. parspec-craft enforces mode-per-surface.
       - `tokens.typography` — explicit `letter_spacing` per scale step (Linear/Vercel
-        pattern: tight type carries semantic-only color without motion/illustration
-        as carry-layer).
+        pattern).
 
-    CEO proposal (v4) at Parspec_Brand_Evolution/Artifacts/CEO_Proposal_2026-05-04_v4.pdf
-    recommends D2+D4 hybrid; brand v2 yaml will land post-CEO decision as v2.0.0.
+    v2.0.0 — Brand lock from 2-agent collaboration (Brand Marketer × Graphics
+    Designer, R1+R2). See Parspec_Brand_Evolution/Reviews/Lock_Final_Synthesis.md
+    for the full decision log. Bumps brand_version to 2026-Q3-v1, status
+    "locked-pending-CEO-ratification."
+
+    Major changes from 1.2.0:
+      - `brand.600` nudged #FE7002 → #F58220 (Designer R1 craft fix; softens 9°
+        hue break at .500→.600 to 5°)
+      - `brand.700` updated to #C85F0F; `brand.800 #8C5800` added for
+        accent-type-on-light (solves AA failure: Brand Orange on Off-white = 1.73:1)
+      - Teal ramp tightened to 4 stops (100/300/500/700); .200 and .400 dropped
+        as muddy at 12px on charcoal
+      - NEW `steel:` primitive ramp (300/500/700) — Blueprint Blue, narrative
+        job = engineering-document register (info_on_light, link, doc-metadata,
+        schedule headers). Empirically deployed in CLI + Sales decks as #205991.
+      - NEW `slate:` primitive ramp (50/300/500/700) — cool-neutral utility for
+        body chrome, table borders, neutral chart fills. NOT a brand color.
+      - NEW `status.warn = #B45309` Caution Amber — replaces `roles.warn:
+        {brand.500}` placeholder (was an active CTA-monopoly violation)
+      - NEW mode-aware status variants: error_on_dark / warn_on_dark / success_on_dark
+        bound to lighter primitives that pass AA on Parspec Black
+      - Roles refactored: mode-aware *_on_dark / *_on_light splits, narrative
+        cool-family role bindings (info → steel; cool_primary → teal;
+        body chrome → slate)
+      - 4 NEW invariants: red_markup_monopoly (error), warn_not_brand (error),
+        orange_type_on_light_forbidden (error), paper_warm_panel_only (warning),
+        steel_is_doc_register (warning)
+
+    v1.2.0 — Empirical evidence from internal decks (BVIN slide 5; CLI Project
+    Management; Sales Management — May 2026 audit):
+      - Brand orange ramp updated with BVIN-deployed variants:
+          400: #FFAB40 (BVIN light) ← was #FFB44D
+          600: #FE7002 (BVIN bright) ← was #E58F00
+          700: #F66B00 (BVIN burnt) ← was #B36F00
+        Charts now have a 4-step orange ramp inside one hue family — no need to
+        reach for an off-brand secondary just to fill chart series.
+      - NEW `teal:` primitive ramp anchored on two BVIN-deployed hexes:
+          100: #A2C4C9 (BVIN pale teal — deployed as chart tint)
+          500: #046F73 (BVIN deep teal — deployed as chart cool complement)
+        Teal replaces the v1 Blueprint Blue / Violet / Deep Rose mess as the single
+        complementary cool to Brand Orange. Adjacent to D4 Drafter Cyan (#0E7490)
+        within ~6 ΔE — the team has organically converged on D4 territory.
+      - NEW `cool_primary` / `cool_subtle` role tokens reference teal — provides
+        chart series and soft-accent slots without designers reaching for hexes.
+      - `#205991` steel-petrol-blue (CLI + Sales decks deployed) noted in
+        `avoid.notes` as v2-emerging — TBD whether to add to primitives in v2.0.0
+        post-CEO.
+
+    Brand version stays 2026-Q1-original; brand v2.0.0 (post-CEO direction lock)
+    will reuse these v1.2.0 primitives + add a steel-blue ramp (probably built on
+    #205991 if CEO ratifies the BVIN/CLI/Sales empirical convergence).
+
+    CEO proposal v5 at Parspec_Brand_Evolution/Artifacts/CEO_Proposal_2026-05-04_v5.pdf
+    incorporates the BVIN slide 5 evidence and recommends a "fewer secondaries,
+    deeper tonal discipline within each hue" framing — codifying what the team
+    already does well in real artifacts.
 
 # ────────────────────────────────────────────────────────────────────
 # IDENTITY
@@ -132,18 +187,67 @@ primitives:
       900: "#1A1A1A"
       950: "#0F0F0F"  # Parspec Black (Parspec named)
 
-    brand:              # Brand Orange — the hero color
+    brand:              # Brand Orange — the hero color (v2.0.0 ramp)
       50:  "#FFF6E5"
       100: "#FFEACC"
       200: "#FFD699"
-      300: "#FFC266"
-      400: "#FFB44D"
-      500: "#FFA72B"  # Brand Orange (Parspec named primary CTA)
-      600: "#E58F00"
-      700: "#B36F00"
-      800: "#8C5800"
+      300: "#FFC368"  # tint
+      400: "#FFB549"  # tint (replaces v1.2.0 #FFAB40 with Designer's smooth-curve value)
+      500: "#FFA72B"  # Brand Orange (LOCKED — primary CTA monopoly)
+      600: "#F58220"  # ★ harmony nudge from #FE7002 — softens 9° hue break to 5°
+      700: "#C85F0F"  # deeper burnt — UI fill stop only, NOT type
+      800: "#8C5800"  # ★ accent_type_on_light — passes AA at 6.5:1 on off-white
       900: "#664000"
       950: "#332100"
+
+    # Teal — cool complement (v2.0.0: 4-stop ramp; .200 + .400 dropped per
+    # Designer R2 — interpolated mids muddy at 12px on charcoal ground).
+    # Narrative job: chart cool / soft accent / brand cool complement (warm-cyan,
+    # ocean register). Lives in both modes; product-UI hero secondary.
+    teal:
+      50:  "#E0F4F5"  # cool_subtle_surface role
+      100: "#A2C4C9"  # ★ Pale Teal — BVIN slide 5 anchor (deployed). Dark-mode chart tint only — fails AA on light at 1.66:1
+      300: "#50979E"  # mid, charcoal-legible at 12px
+      500: "#046F73"  # ★ Deep Teal — BVIN slide 5 anchor (deployed). cool_primary; product-UI hero
+      700: "#03494C"  # ★ cool_hero — biased away from ACC cyan thumbnail collision
+
+    # ★ NEW v2.0.0 — Steel-Petrol (Blueprint Blue): the engineering-document
+    # register. 3-stop ramp; empirically deployed as #205991 in CLI + Sales
+    # decks (May 2026 audit). Distinct narrative job from teal: signals
+    # engineering authority and document specificity (info_on_light, link,
+    # doc-metadata, schedule-table headers, "click to open the spec").
+    # Lives on light surfaces (6.47:1 AA pass); never dark-slide hero.
+    steel:
+      300: "#5A8AC4"  # tint, info_on_dark
+      500: "#205991"  # ★ ANCHOR — empirical (CLI + Sales decks). Blueprint Blue
+      700: "#143A60"  # deeper, doc title-block
+
+    # ★ NEW v2.0.0 — Slate: cool-neutral utility (NOT a brand color).
+    # Structural / utility role — body chrome, table borders, secondary text,
+    # neutral chart fills, light-mode panel tints. Appears in both modes.
+    # Distinct from steel (saturated brand-tinted blue) and teal (cool brand
+    # complement) — slate is grayscale-cool with a subtle blue cast.
+    slate:
+      50:  "#F1F5F9"  # neutral_subtle_surface — product-UI panel tint
+      300: "#94A3B8"  # info_on_dark for neutral data, body chrome on dark
+      500: "#475569"  # info_on_light for neutral data; passes AA at 6.77:1 on off-white
+      700: "#334155"  # data-secondary deep, table-header on light
+
+    # ★ NEW v2.0.0 — Paper: warm document-tint ramp. Used ONLY as panel inset
+    # inside dark slides (the "vellum on a dark drafting board" signature wedge).
+    # Never a slide background — invariant `paper_warm_panel_only` enforces.
+    paper:
+      warm:    "#FAF7F0"  # ★ ANCHOR — paper-warm panel inset (the thumbnail wedge vs ACC)
+      warm_50: "#FDFBF6"  # lighter, layered panels
+
+    # ★ NEW v2.0.0 — Amber: status warning ramp. Caution Amber #B45309 anchor.
+    # Replaces the v1.2.0 placeholder `roles.warn: {brand.500}` which was an
+    # active CTA-monopoly violation. Distinct narrative job from brand orange:
+    # signals "construction-site caution sign" / OVERDUE / warning state.
+    # Locked semantic — never decorative, never in chart palette.
+    amber:
+      500: "#B45309"  # ★ Caution Amber — status.warn anchor; ΔL22 from CTA orange
+      600: "#D97706"  # warn_on_dark — passes AA at 5.12:1 on Parspec Black
 
     # Legacy v1 secondaries — flagged for evolution.
     # Kept as primitives for backward-compat with brand-2026-Q1-original artifacts.
@@ -165,38 +269,91 @@ primitives:
 # referencing the role token.
 # ────────────────────────────────────────────────────────────────────
 roles:
-  # ─── Action verbs ───
-  cta:                  "{brand.500}"          # Primary CTA — Brand Orange. Monopoly enforced.
-  cta_hover:            "{brand.600}"
-  cta_active:           "{brand.700}"
-  cta_text:             "{neutral.950}"        # Black text on orange CTA
+  # v2.0.0 — Refactored from 2-agent lock collaboration.
+  # See Parspec_Brand_Evolution/Reviews/Lock_Final_Synthesis.md for decision log.
+  # Naming convention: roles split by surface mode where the AA math diverges
+  # (e.g., orange-as-type fails AA on light → use brand.800; passes AA on dark → use brand.500).
 
-  # ─── Status / semantic signals ───
-  warn:                 "{brand.500}"          # v1: warn = brand orange. v2 (post-CEO): swap to safety yellow.
-  alert:                "{legacy_v1.ember_red}" # Critical / destructive
-  error:                "{legacy_v1.ember_red}"
-  success:              "{legacy_v1.emerald_green}"
-  info:                 "{neutral.500}"        # Neutral information
+  # ─── Action verbs (CTA monopoly enforced) ───
+  cta:                       "{brand.500}"        # Primary CTA fill — Brand Orange. Monopoly invariant.
+  cta_hover:                 "{brand.600}"        # ★ now #F58220 (harmony nudge from v1.2.0 #FE7002)
+  cta_active:                "{brand.700}"        # #C85F0F press state
+  cta_text:                  "{neutral.950}"      # Black text on orange CTA fill
+
+  # ─── Brand-orange type bindings (mode-aware — solves AA failure) ───
+  accent_type_on_dark:       "{brand.500}"        # 9.87:1 on Parspec Black — PASS
+  accent_type_on_light:      "{brand.800}"        # ★ NEW — #8C5800, 6.5:1 on off-white. NEVER brand.500 on light (1.73:1 — FAIL)
+
+  # ─── Cool complement — Teal (chart cool, soft accent, brand cool register) ───
+  cool_primary:              "{teal.500}"         # Deep Teal — product-UI hero secondary (5.32:1 on off-white)
+  cool_hero:                 "{teal.700}"         # ★ NEW — #03494C, dark-slide hero (anti-ACC differentiation)
+  cool_subtle_surface:       "{teal.100}"         # Pale Teal — dark-mode chart tint only (10.29:1 on black; 1.66:1 on light — fails)
+  cool_chart_on_dark:        "{teal.300}"         # 12px-legible on charcoal
+
+  # ─── Engineering doc register — Steel-Petrol (Blueprint Blue) ★ NEW ───
+  # Narrative job: signals engineering authority + document specificity.
+  # Lives on light surfaces (passes AA at 6.47:1). Distinct from teal (cool
+  # complement) and slate (cool-neutral utility). parspec-craft lints if
+  # used outside info_* / link / doc-metadata roles.
+  info_on_light:             "{steel.500}"        # link, doc-metadata, schedule headers
+  info_on_dark:              "{steel.300}"        # AA-passing on charcoal
+  doc_title_block:           "{steel.700}"        # drawing-block header lockup, deep doc affordance
+
+  # ─── Cool-neutral utility — Slate ★ NEW ───
+  # Body chrome, table borders, secondary text, neutral chart fills.
+  # NOT a brand color — utility only.
+  body_chrome_on_light:      "{slate.500}"        # 6.77:1 on off-white
+  body_chrome_on_dark:       "{slate.300}"        # 6.84:1 on Parspec Black
+  border_neutral_dark:       "{slate.700}"
+  border_neutral_light:      "{slate.300}"
+
+  # ─── Status — semantic-locked (never decorative) ───
+  status_error_on_light:     "{legacy_v1.ember_red}"  # #B91C1C, 5.78:1 on off-white
+  status_error_on_dark:      "#EF4444"               # ★ red-500, 5.94:1 on black (AA-bound for dark)
+  status_warn_on_light:      "{amber.500}"           # ★ #B45309 Caution Amber, 5.86:1 on off-white
+  status_warn_on_dark:       "{amber.600}"           # ★ #D97706, 5.12:1 on black
+  status_success_on_light:   "{legacy_v1.emerald_green}"  # #15803D, 4.48:1 on off-white
+  status_success_on_dark:    "#22C55E"               # ★ green-500, 5.71:1 on black
 
   # ─── Surface tokens — keyed to surfaces.* mode bindings ───
-  surface_dark:         "{neutral.950}"        # brand_artifacts mode background
-  surface_dark_layer:   "{neutral.850}"        # brand_artifacts layered surface (charcoal)
-  surface_dark_alt:     "{neutral.900}"        # brand_artifacts alternative
-  surface_light:        "{neutral.200}"        # product_ui mode background (off-white)
-  surface_light_alt:    "{neutral.100}"        # product_ui layered surface
-  surface_doc:          "{neutral.0}"          # documents mode (pure white — AP systems expect)
+  surface_dark:              "{neutral.950}"      # brand_artifacts mode background (Parspec Black)
+  surface_dark_panel:        "{neutral.850}"      # Charcoal layering surface
+  surface_dark_alt:          "{neutral.900}"
+  surface_light:             "{neutral.200}"      # product_ui mode background (Off-white)
+  surface_light_alt:         "{neutral.100}"
+  surface_doc:               "{neutral.0}"        # documents mode (pure White — AP systems expect)
+  surface_paper:             "{paper.warm}"       # ★ NEW — #FAF7F0 panel inset (NEVER slide background; invariant: paper_warm_panel_only)
+  surface_subtle_cool:       "{teal.50}"          # #E0F4F5 light-mode panel tint
+  surface_subtle_neutral:    "{slate.50}"         # #F1F5F9 product-UI panel tint
 
-  # ─── Text tokens — split by mode ───
-  text_dark_primary:    "{neutral.0}"          # White on dark
-  text_dark_secondary:  "{neutral.300}"
-  text_dark_tertiary:   "{neutral.500}"
-  text_light_primary:   "{neutral.950}"        # Parspec Black on light
-  text_light_secondary: "{neutral.700}"
-  text_light_tertiary:  "{neutral.600}"
+  # ─── Text tokens — split by mode (existing, unchanged) ───
+  text_dark_primary:         "{neutral.0}"
+  text_dark_secondary:       "{neutral.300}"
+  text_dark_tertiary:        "{neutral.500}"
+  text_light_primary:        "{neutral.950}"
+  text_light_secondary:      "{neutral.700}"
+  text_light_tertiary:       "{neutral.600}"
 
-  # ─── Border tokens ───
-  border_dark:          "{neutral.800}"
-  border_light:         "{neutral.300}"
+  # ─── Borders (delegate to slate ramp now) ───
+  border_dark:               "{slate.700}"
+  border_light:              "{slate.300}"
+
+  # ─── Chart series — pre-built per-mode recipes (replaces v1.2.0 single-mode chart_1..5) ───
+  # Designers reach for these instead of picking primitives ad-hoc.
+  # Mode-aware: dark mode uses .300 stops where .500 fails AA.
+  chart_1_light: "{brand.500}"       # Hero series — Brand Orange
+  chart_2_light: "{teal.500}"        # Cool complement — Deep Teal
+  chart_3_light: "{steel.500}"       # Blueprint Blue — engineering doc data
+  chart_4_light: "{brand.700}"       # Burnt orange variant
+  chart_5_light: "{teal.300}"        # Mid teal
+  chart_6_light: "{slate.500}"       # Cool-neutral utility
+
+  chart_1_dark:  "{brand.500}"       # 9.87:1 on Parspec Black — PASS
+  chart_2_dark:  "{teal.300}"        # AA-bound for dark — .500 fails at 3.22:1
+  chart_3_dark:  "{steel.300}"       # AA-bound for dark
+  chart_4_dark:  "{brand.300}"       # tint variant
+  chart_5_dark:  "{teal.100}"        # Pale teal tint (decorative chart layer only)
+  chart_6_dark:  "{off_white}"       # Off-white as 6th series
 
 # ────────────────────────────────────────────────────────────────────
 # SEMANTIC TOKENS
@@ -478,4 +635,26 @@ invariants:
   density_limits:
     rule: "Per slide: 1 heading + 4–6 bullets OR 2 paragraphs OR 6 cards (2×3/3×2) OR 8–10 lines of code OR 1 quote ≤3 lines OR 1 image ≤60vh."
     rationale: "Content overflow signals bad layout, not bad content. Split, never cram."
+    severity: "warning"
+
+  # ★ NEW v2.0.0 — added from 2-agent lock collaboration ★
+  red_markup_monopoly:
+    rule: "Engineering Red #B91C1C appears ONLY in error/markup/REV-stamp roles (status_error_*, drawing-block REV stamps). Never decorative, never in chart palette, never as a brand accent."
+    rationale: "The drawing-block-header signature collapses if red leaks into chart series or button hover states. Same construction as cta_color_monopoly. Locking the rule prevents the next CMO/designer from re-litigating in 18 months."
+    severity: "error"
+  warn_not_brand:
+    rule: "roles.status_warn_* MUST resolve to amber.500 / amber.600 (Caution Amber). Never brand.500 (Brand Orange)."
+    rationale: "Brand Orange CTA + Brand Orange OVERDUE-warning is an active CTA-monopoly violation. Caution Amber #B45309 is a separate semantic hue family — same lock construction as red_markup_monopoly."
+    severity: "error"
+  orange_type_on_light_forbidden:
+    rule: "Brand Orange (brand.500 #FFA72B) MUST NOT be used as type color on light surfaces (off-white, white, paper-warm). Use brand.800 #8C5800 for accent_type_on_light."
+    rationale: "WCAG AA: brand.500 on Off-white = 1.73:1 — FAIL for normal text and large text. brand.800 on Off-white = 6.5:1 — PASS. Orange-as-fill on CTAs is fine; orange-as-type on light is the single biggest accessibility risk in the system."
+    severity: "error"
+  paper_warm_panel_only:
+    rule: "surface_paper (paper-warm #FAF7F0) appears ONLY as a panel inset INSIDE dark slides. Never as a slide background, never as a product-UI surface."
+    rationale: "Paper-warm-panel-on-dark is the single most-recognizable Parspec signature at thumbnail size — the wedge against Autodesk Construction Cloud's all-cool register. Dilution as a slide background collapses the signal."
+    severity: "warning"
+  steel_is_doc_register:
+    rule: "Steel-Petrol (steel.500 #205991) appears ONLY in info_* / link_* / doc-metadata / schedule-header / drawing-block-header roles. Never in chart series without info semantics. Never as a brand accent."
+    rationale: "Steel = Blueprint Blue narrative job (engineering authority + document specificity). Teal = brand cool complement (chart cool, soft accent). Slate = cool-neutral utility (body chrome, table borders). Three cools, three named jobs — collapse the role-locking and we're back in v1's swatch-book mess."
     severity: "warning"

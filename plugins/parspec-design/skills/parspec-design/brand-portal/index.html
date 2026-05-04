@@ -4,8 +4,8 @@
 <!--
     AUTO-GENERATED FROM design-model.yaml — DO NOT EDIT MANUALLY
     Regenerate: python3 scripts/generate-brand-portal.py
-    Generated: 2026-05-04 19:46 UTC
-    design-model.yaml version: 1.1.0 · brand_version: 2026-Q1-original
+    Generated: 2026-05-04 21:57 UTC
+    design-model.yaml version: 2.0.0 · brand_version: 2026-Q3-v1
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -127,7 +127,7 @@ h3.subsection { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.005em;
   <div class="portal-header-inner">
     <div class="portal-mark">
       <strong>PARSPEC</strong>
-      <span class="portal-meta">Brand Portal · v1.1.0 · 2026-Q1-original</span>
+      <span class="portal-meta">Brand Portal · v2.0.0 · 2026-Q3-v1</span>
     </div>
     <nav class="portal-nav"><a class="portal-nav-item active" href="index.html">Overview</a><a class="portal-nav-item" href="color.html">Color</a><a class="portal-nav-item" href="logo.html">Logo & Motifs</a><a class="portal-nav-item" href="typography.html">Typography</a><a class="portal-nav-item" href="co-brand.html">Co-brand Rules</a></nav>
   </div>
@@ -140,7 +140,7 @@ h3.subsection { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.005em;
 
 <div class="callout">
   <div class="eyebrow">Active version</div>
-  <p style="margin:0;">Schema version <strong>1.1.0</strong> · Brand version <strong>2026-Q1-original</strong> · Updated <strong>2026-05-04</strong> by <strong>eric@parspec.io</strong>.</p>
+  <p style="margin:0;">Schema version <strong>2.0.0</strong> · Brand version <strong>2026-Q3-v1</strong> · Updated <strong>2026-05-04</strong> by <strong>eric@parspec.io</strong>.</p>
 </div>
 
 <h2 class="section">What's here</h2>
@@ -179,18 +179,71 @@ pastel tints flagged in `avoid` because precedent research showed 0 of 27 ICP
 brands use this register.
 
 v1.1.0 — Architectural additions from 3-round design review (no brand-color
-change yet — that's v2.0.0 post-CEO):
+change yet):
   - `roles:` block — two-tier token model (primitives → roles → semantic).
     Polaris/Carbon precedent. Every role token references exactly one primitive.
     Compile-time CTA monopoly enforcement instead of designer judgment.
   - `surfaces:` block — codifies brand-artifacts=dark, product-ui=light,
     documents=light. parspec-craft enforces mode-per-surface.
   - `tokens.typography` — explicit `letter_spacing` per scale step (Linear/Vercel
-    pattern: tight type carries semantic-only color without motion/illustration
-    as carry-layer).
+    pattern).
 
-CEO proposal (v4) at Parspec_Brand_Evolution/Artifacts/CEO_Proposal_2026-05-04_v4.pdf
-recommends D2+D4 hybrid; brand v2 yaml will land post-CEO decision as v2.0.0.</pre>
+v2.0.0 — Brand lock from 2-agent collaboration (Brand Marketer × Graphics
+Designer, R1+R2). See Parspec_Brand_Evolution/Reviews/Lock_Final_Synthesis.md
+for the full decision log. Bumps brand_version to 2026-Q3-v1, status
+"locked-pending-CEO-ratification."
+
+Major changes from 1.2.0:
+  - `brand.600` nudged #FE7002 → #F58220 (Designer R1 craft fix; softens 9°
+    hue break at .500→.600 to 5°)
+  - `brand.700` updated to #C85F0F; `brand.800 #8C5800` added for
+    accent-type-on-light (solves AA failure: Brand Orange on Off-white = 1.73:1)
+  - Teal ramp tightened to 4 stops (100/300/500/700); .200 and .400 dropped
+    as muddy at 12px on charcoal
+  - NEW `steel:` primitive ramp (300/500/700) — Blueprint Blue, narrative
+    job = engineering-document register (info_on_light, link, doc-metadata,
+    schedule headers). Empirically deployed in CLI + Sales decks as #205991.
+  - NEW `slate:` primitive ramp (50/300/500/700) — cool-neutral utility for
+    body chrome, table borders, neutral chart fills. NOT a brand color.
+  - NEW `status.warn = #B45309` Caution Amber — replaces `roles.warn:
+    {brand.500}` placeholder (was an active CTA-monopoly violation)
+  - NEW mode-aware status variants: error_on_dark / warn_on_dark / success_on_dark
+    bound to lighter primitives that pass AA on Parspec Black
+  - Roles refactored: mode-aware *_on_dark / *_on_light splits, narrative
+    cool-family role bindings (info → steel; cool_primary → teal;
+    body chrome → slate)
+  - 4 NEW invariants: red_markup_monopoly (error), warn_not_brand (error),
+    orange_type_on_light_forbidden (error), paper_warm_panel_only (warning),
+    steel_is_doc_register (warning)
+
+v1.2.0 — Empirical evidence from internal decks (BVIN slide 5; CLI Project
+Management; Sales Management — May 2026 audit):
+  - Brand orange ramp updated with BVIN-deployed variants:
+      400: #FFAB40 (BVIN light) ← was #FFB44D
+      600: #FE7002 (BVIN bright) ← was #E58F00
+      700: #F66B00 (BVIN burnt) ← was #B36F00
+    Charts now have a 4-step orange ramp inside one hue family — no need to
+    reach for an off-brand secondary just to fill chart series.
+  - NEW `teal:` primitive ramp anchored on two BVIN-deployed hexes:
+      100: #A2C4C9 (BVIN pale teal — deployed as chart tint)
+      500: #046F73 (BVIN deep teal — deployed as chart cool complement)
+    Teal replaces the v1 Blueprint Blue / Violet / Deep Rose mess as the single
+    complementary cool to Brand Orange. Adjacent to D4 Drafter Cyan (#0E7490)
+    within ~6 ΔE — the team has organically converged on D4 territory.
+  - NEW `cool_primary` / `cool_subtle` role tokens reference teal — provides
+    chart series and soft-accent slots without designers reaching for hexes.
+  - `#205991` steel-petrol-blue (CLI + Sales decks deployed) noted in
+    `avoid.notes` as v2-emerging — TBD whether to add to primitives in v2.0.0
+    post-CEO.
+
+Brand version stays 2026-Q1-original; brand v2.0.0 (post-CEO direction lock)
+will reuse these v1.2.0 primitives + add a steel-blue ramp (probably built on
+#205991 if CEO ratifies the BVIN/CLI/Sales empirical convergence).
+
+CEO proposal v5 at Parspec_Brand_Evolution/Artifacts/CEO_Proposal_2026-05-04_v5.pdf
+incorporates the BVIN slide 5 evidence and recommends a "fewer secondaries,
+deeper tonal discipline within each hue" framing — codifying what the team
+already does well in real artifacts.</pre>
 
 </main>
 
