@@ -27,6 +27,20 @@
       "source": "./plugins/parspec-craft",
       "category": "design-system",
       "tags": ["lint", "craft", "anti-ai-slop", "brand-compliance", "parspec"]
+    },
+    {
+      "name": "parspec-review",
+      "description": "Design jury skill. 4 parallel vision-capable critic agents (composition / data-viz / brand-fidelity / anti-AI-slop) + a severity-times-agreement aggregator that replaces parspec-slides Round 5b single-reviewer pass. Catches compositional, data-viz, brand-fidelity, and template-feel issues that a single Opus pass misses. Anti-slop juror deliberately receives PNG only (no manifest priming) per ChatEval persona-diversity research.",
+      "source": "./plugins/parspec-review",
+      "category": "design-system",
+      "tags": ["review", "design-jury", "visual-review", "anti-ai-slop", "parspec"]
+    },
+    {
+      "name": "parspec-pptx",
+      "description": "PowerPoint .pptx generation skill. Reads design-model.yaml from parspec-design and emits board-ready editable .pptx via python-pptx — the right output when the deliverable must open natively in PowerPoint/Keynote (board decks, IC memos, sales-conference handouts). 8-layout library + paper-warm panel motif + corner-bracket signature + a macOS PowerPoint render daemon (open-keep-alive) for fast iterate-and-verify cycles.",
+      "source": "./plugins/parspec-pptx",
+      "category": "productivity",
+      "tags": ["presentations", "pptx", "powerpoint", "python-pptx", "board-deck", "parspec"]
     }
   ]
 }

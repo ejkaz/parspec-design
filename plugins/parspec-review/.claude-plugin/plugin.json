@@ -1,0 +1,20 @@
+{
+  "name": "parspec-review",
+  "version": "0.1.0",
+  "description": "Design jury skill — 4 parallel vision-capable critic agents + 1 aggregator that review a rendered parspec-slides deck, replacing the single-Opus visual review pass with a juror panel that catches compositional, data-viz, brand-fidelity, and anti-AI-slop issues a single reviewer misses.",
+  "author": {
+    "name": "ejkaz",
+    "url": "https://github.com/ejkaz"
+  },
+  "homepage": "https://github.com/ejkaz/parspec-design",
+  "repository": "https://github.com/ejkaz/parspec-design",
+  "license": "MIT",
+  "keywords": [
+    "parspec",
+    "design-review",
+    "jury",
+    "presentations",
+    "visual-review",
+    "anti-ai-slop"
+  ]
+}

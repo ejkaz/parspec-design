@@ -1,0 +1,132 @@
+# ════════════════════════════════════════════════════════════════════
+# parspec-review verdict schema
+#
+# This is the schema the aggregator emits to review/visual-r1.yaml.
+# Backward-compatible with parspec-slides Round 5b/5c — fields not
+# present in the legacy single-reviewer schema are additive (per_juror,
+# cluster_id, agreement, jurors[]).
+#
+# parspec-slides reassembler reads `decision.revisions_needed` and
+# `decision.blocks` exactly as before; the richer per-finding data is
+# available for revisor agents that want to consume juror-specific
+# context (Round 5c revisors should read both `consensus_fix` and
+# `per_juror.<juror>.fix` — they often differ in framing).
+# ════════════════════════════════════════════════════════════════════
+
+visual_review_round: 1
+reviewer_model: "design-jury"
+verdict_source: "jury"                         # "single" | "jury"
+jurors:
+  - "composition"
+  - "dataviz"
+  - "brand-fidelity"
+  - "anti-slop"
+aggregator_model: "sonnet"                     # text-only model
+reviewed_at: "2026-05-05T15:30:00Z"
+
+per_slide:
+
+  "01":
+    pass: true
+    verdict: PASS
+    cluster_count: 0
+    findings: []
+
+  "13":
+    pass: false
+    verdict: REVISE
+    cluster_count: 2
+    findings:
+      - cluster_id:        "13-whitespace-middle-band"
+        dimension_class:   whitespace
+        region:            "middle-band, y~210→y~510"
+        agreement:         0.50                # 2 of 4 jurors
+        severity:          0.6
+        score:             0.30                # below 0.4 threshold but proximal — included for audit
+        jurors:            ["composition"]
+        consensus_issue:   "300px gap between headline and stat-row reads as a missing connecting element."
+        consensus_fix:     "Tighten slide-content gap; or insert a 1-line subhead at y~280 to bridge."
+        per_juror:
+          composition:
+            issue: "300px gap between headline (y~210) and stat-row (y~510). Reads as missing connecting element."
+            fix:   "Tighten by collapsing slide-content gap; or insert a 1-line subhead at y~280 to bridge."
+
+      - cluster_id:        "13-template_feel-whole-slide"
+        dimension_class:   template_feel
+        region:            "whole slide"
+        agreement:         0.50
+        severity:          0.4
+        score:             0.20
+        jurors:            ["anti-slop"]
+        consensus_issue:   "Three centered stats in equal-width columns reads as default stats-block template."
+        consensus_fix:     "Switch to L9 bento — make hero stat 2× larger; demote others to support cells."
+        per_juror:
+          anti-slop:
+            tell_id:  3
+            issue:    "Three-column equal-width stat grid (centered) — instant 'I asked for a stats slide' template tell."
+            fix:      "Break symmetry with bento — promote 77% to hero cell."
+
+cross_slide_findings:
+  - cluster_class: whitespace
+    affected_slides: ["13", "37", "38", "39", "40"]
+    pattern: "Persona/stats slides leave 30%+ vertical canvas empty — content stacks at top."
+    deck_level_fix: "Add `.slide-content` `justify-content: center` default in prelude.css for slides without explicit alignment override (already in place; verify writer compliance)."
+  - cluster_class: hierarchy
+    affected_slides: ["22", "27", "36"]
+    pattern: "L1 title-slide variants over-rely on left-anchored hero — the right 60% reads as wasted canvas at 1920×1080."
+    deck_level_fix: "Author L1-variant 'centered-statement' as a sub-layout for non-divider title slides (or use L11 statement instead)."
+
+decision:
+  ready_to_ship: false
+  revisions_needed: []                       # populated for slides at REVISE verdict
+  blocks: []                                 # populated for slides at BLOCK verdict
+  conductor_action: |
+    Resolve cross-slide whitespace pattern via prelude.css confirmation. Dispatch
+    revisors for any per-slide REVISE clusters with score ≥ 0.4. No deck-wide
+    BLOCKs detected.
+
+# ─── Sanity check (always emitted) ────────────────────────────────
+sanity:
+  total_slides: 55
+  pass_rate:                "65%"
+  revise_rate:              "31%"
+  block_rate:               "4%"
+  juror_unanimity_rate:     "18%"            # % of clusters with agreement = 1.00
+  most_common_dimension_class: whitespace
+  most_common_region:       "middle-band"
+  jurors_called: 220                          # 55 slides × 4 jurors
+  jurors_skipped: 38                          # data-viz juror reported applicable=false on 38 slides
+  total_findings_before_clustering: 142
+  total_clusters_after: 89
+  cluster_compression_ratio: 0.63             # findings_after / findings_before
+
+# ─── Per-juror summary (for cost / coverage audit) ─────────────────
+juror_summary:
+  composition:
+    slides_reviewed: 55
+    avg_score: 7.4
+    findings_count: 47
+  dataviz:
+    slides_reviewed: 55
+    applicable_count: 17                      # only slides with charts/tables/stats
+    avg_score: 8.1
+    findings_count: 22
+  brand-fidelity:
+    slides_reviewed: 55
+    avg_score: 8.6                            # brand discipline generally holds
+    findings_count: 31
+  anti-slop:
+    slides_reviewed: 55
+    avg_tells: 0.8
+    findings_count: 42
+
+# Notes for downstream consumers:
+# - Round 5c revisor dispatcher: read `decision.revisions_needed`, build per-slide
+#   prompts using the highest-score cluster's `consensus_fix` as primary directive,
+#   plus all `per_juror.*.fix` blocks as supporting context (revisors should
+#   reconcile differing framings, not pick one arbitrarily).
+# - parspec-craft: read `cross_slide_findings` with `deck_level_fix` containing
+#   "prelude.css" or CSS rule changes — these are CSS-level concerns, not
+#   per-slide HTML edits.
+# - Conductor: if `block_rate > 25%`, escalate. The deck has structural problems
+#   that revisor patches won't fix.
