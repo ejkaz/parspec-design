@@ -1,0 +1,20 @@
+{
+  "name": "parspec-pptx",
+  "version": "0.2.0",
+  "description": "Parspec .pptx generation \u2014 board-ready PowerPoint decks built with python-pptx, reading the same design-model.yaml SSoT as parspec-slides. Outputs editable .pptx that PowerPoint and Keynote render natively, with a keep-alive render daemon for fast iteration.",
+  "author": {
+    "name": "ejkaz",
+    "url": "https://github.com/ejkaz"
+  },
+  "homepage": "https://github.com/ejkaz/parspec-design",
+  "repository": "https://github.com/ejkaz/parspec-design",
+  "license": "MIT",
+  "keywords": [
+    "parspec",
+    "presentations",
+    "pptx",
+    "powerpoint",
+    "python-pptx",
+    "board-deck"
+  ]
+}
