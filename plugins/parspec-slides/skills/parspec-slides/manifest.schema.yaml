@@ -1,0 +1,93 @@
+# ════════════════════════════════════════════════════════════════════
+# Slide Manifest Schema — sidecar metadata for each parallel-written slide.
+#
+# Every slide-writer subagent in Phase 3-parallel mode produces TWO files:
+#   • slides/slide-NN.html           — the <section class="slide">…</section>
+#   • slides/slide-NN.manifest.yaml  — this schema, populated for that slide
+#
+# The manifest is the coordination protocol. The reviewer reads manifests
+# instead of full HTML. Total manifest size for a 12-slide deck is ~7 KB,
+# which fits any model's context easily and keeps the editorial brain
+# focused on cross-slide questions instead of HTML parsing.
+# ════════════════════════════════════════════════════════════════════
+
+slide:
+  id: "NN"                          # zero-padded, matches filename
+  position: 3                       # 1-indexed final position in deck
+  total: 12                         # total slides — set by conductor at planning
+  title: "The Problem"              # short scannable title
+  layout: "L3-content"              # which layouts.md template was used
+                                    # (L1-title / L2-metric / L3-content / L4-cols2 /
+                                    #  L5-quote / L6-logo-wall / L7-chart / L8-end)
+  surface_mode: "brand_artifacts"   # brand_artifacts | product_ui | documents
+  background: "#0F0F0F"             # actual rendered background hex
+
+intent:
+  brief: "framing — set up the data slide that follows"   # what conductor asked for
+  thesis: "Current secondaries read as consumer-SaaS in the ICP context"
+                                    # the ONE idea this slide carries
+  expects_prev: "setup-or-exec-summary"     # what kind of slide should come before
+  expects_next: "data-payoff-with-stats"    # what kind should come after
+  hands_off:                        # what THIS slide deliberately leaves unsaid
+    - "the actual frequency stat (0/27)"   # — for next slide to deliver
+    - "the specific brands surveyed"
+
+content:
+  word_count: 142                   # rough — used for density/rhythm checks
+  density: "medium"                 # title-only | sparse | medium | dense
+  elements:
+    headings: 1
+    subheads: 1
+    bullets: 5
+    ctas: 0
+    charts: 0
+    quotes: 0
+    images: 0
+
+tokens_consumed:                    # which design-model.yaml roles were used
+  - "var(--brand-orange)"
+  - "var(--slate-500)"
+  - "var(--eyebrow-size)"
+  - "var(--display-size)"
+
+custom_css: []                      # 0 = clean; non-zero requires conductor review
+                                    # subagents should NOT add custom CSS unless
+                                    # the layout literally requires it
+custom_assets: []                   # any inline SVG, images, fonts beyond Montserrat
+
+voice:
+  register: "terse-direct"          # must match design-model.yaml voice.do register
+  caps_used: true                   # tracked-caps section header (Parspec idiom)
+  invented_metrics: false           # parspec-craft red flag if true
+  mep_vocabulary:                   # MEP/distributor industry terms used
+    - "distributors"
+    - "submittals"
+
+cross_refs:
+  cites_slide: []                   # [04] if this slide references slide 4
+  pickup_line: "Reads as: Linear · Notion · Figma"
+                                    # the closing line/phrase of THIS slide.
+                                    # Reviewer uses this to check the transition
+                                    # to slide N+1's opening.
+
+self_check:
+  density_passes: true              # within layout's max density (per layouts.md)
+  cta_count_under_2: true           # CTA monopoly compliance
+  primary_axis_present: true        # uses Black/Charcoal/Off-white/Brand Orange
+  any_concerns: null                # subagent flags ambiguities for reviewer
+                                    # e.g. "couldn't fit the 3rd metric — split?"
+
+# ─── Reviewer fields (populated in Round 2 by the reviewer agent) ───
+review:
+  verdict: null                     # PASS | REVISE | BLOCK — set in Round 2
+  reasons: []                       # specific concerns if REVISE/BLOCK
+  cross_refs: []                    # other slides reviewer wants to cite
+  reviewed_at: null                 # ISO timestamp
+  reviewer_model: null              # haiku | sonnet | opus
+
+# ─── Revision fields (populated in Round 3 by the revising subagent) ───
+revision:
+  round: 0                          # 0 = original, 1 = first revision, etc.
+  parent: null                      # null for round 0; otherwise prior manifest
+  changes_applied: []               # what the revisor changed (one-line each)
+  visual_review_pass: null          # only set if visual review was enabled
