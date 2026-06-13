@@ -5,16 +5,56 @@
 # ════════════════════════════════════════════════════════════════════
 
 meta:
-  version: "2.0.0"
+  version: "2.1.0"
   brand_version: "2026-Q3-v1"
-  source: "Parspec Brand v1 + BVIN slide 5 empirical evidence + 2-agent lock collaboration (Brand Marketer × Graphics Designer, May 2026)"
-  updated: "2026-05-04"
+  source: "Parspec Brand v1 + BVIN slide 5 empirical evidence + 2-agent lock collaboration (Brand Marketer × Graphics Designer, May 2026) + Q1-26 Board Finance Appendix empirical convergence (June 2026)"
+  updated: "2026-06-02"
   updated_by: "eric@parspec.io"
   status: "ratified"
   ratified: "2026-05-04"
   ratified_by: "eric@parspec.io"
-  supersedes: "1.2.0"
+  supersedes: "2.0.0"
   notes: |
+    v2.1.0 — Investor-exhibit surface (D004). Empirical convergence from the
+    Q1-26 Board Finance Appendix decks (IB Exhibits + Plain Tables, June 2026):
+    bankers organically built financial tables on a navy-header / cool-grey-fill /
+    muted-status register that is ~entirely steel + slate (families already in
+    v2.0.0) — same convergence pattern as the BVIN evidence that drove v1.2/v2.
+    Changes (all ADDITIVE — no locked primary-axis or existing token altered):
+      - NEW surface `investor_exhibit` (light, off-white bg) — sanctions a 4th
+        surface for board financials / IB exhibits / cohort + ARR tables.
+        Brand decks STAY dark; the financial appendix is its own light surface.
+      - UNIFIER: paper-warm is now "the table panel material" in BOTH contexts —
+        dark narrative slide (Parspec Black bg → paper-warm table panel) AND
+        investor_exhibit (off-white bg → paper-warm table panel). Same table
+        component drops onto either ground; only slide chrome differs. The
+        `paper_warm_panel_only` invariant is UNCHANGED — a table panel is a panel.
+      - NEW serif `family_exhibit = Source Serif 4` (Georgia fallback) — exhibit /
+        financial TITLES only. First serif in the brand; the *chosen* version of
+        the Georgia the bankers reached for. Body/UI/figures stay Montserrat.
+      - NEW `typography.financial_figures` — tabular + lining numerals (tnum/lnum)
+        for any financial table. Column mis-alignment was the biggest credibility
+        miss (mono_for_metrics stays false; Montserrat carries tnum).
+      - NEW slate stops .100 #E2E8F0 (subtotal/total band) + .200 #CBD5E1 (heavy
+        rule; matches deck fill #CBD3DB).
+      - NEW table roles (table_header_exhibit → neutral.850 charcoal,
+        table_header_rule → brand.500 orange keyline, table_panel → paper.warm,
+        table_row_alt, table_border, table_total_band, table_delta_pos/neg) +
+        `components.table_exhibit`.
+      - HEADER DECISION (D004): the source decks used navy (#0B2545 ≈ steel.700);
+        we instead chose a charcoal band + 2px Brand-Orange keyline (option B) —
+        stays in the primary-axis neutral family and carries the brand's one
+        signal color as an accent line. A keyline is NOT a CTA fill, so
+        cta_color_monopoly is unaffected. Steel stays pure doc-register.
+      - NEW status table_delta_pos #2E7D52 / table_delta_neg #B23A36 — muted banker
+        green/red for ± deltas (the decks' own hexes).
+      - 1 NEW invariant `exhibit_tabular_figures` (error); `red_markup_monopoly`
+        amended with a financial-negative-red carve-out (red=negative is a hard
+        finance convention; carved, not broken). `steel_is_doc_register` left
+        intact (the considered steel-header carve-out was dropped with option B).
+      - PENDING CEO sign-off: the serif addition + investor_exhibit surface
+        (mirrors v2.0.0's lock-pending-ratification pattern).
+
     v1.0.0 — Initial brand v1 captured from the March 2026 Parspec Brand Guide PDF.
     Secondaries (Blueprint Blue #6270F2, Violet #8F6EF0, Deep Rose #BE123C) and
     pastel tints flagged in `avoid` because precedent research showed 0 of 27 ICP
@@ -166,6 +206,24 @@ surfaces:
       "Don't put paper-warm on the invoice itself — the actual transactional
       document should stay white because that's what AP systems expect."
       Marketing PDFs and case studies use brand_artifacts mode (dark) instead.
+  investor_exhibit:                    # ★ NEW v2.1.0 — board financials register
+    mode: light
+    examples: [board-financials, ib-exhibits, finance-appendix, kpi-tables, cohort-triangles, ARR-bridges, net-revenue-bridge]
+    background: "{neutral.200}"        # Off-white — AP / print-friendly. NOT paper (panel_only invariant holds)
+    text_primary: "{neutral.950}"      # Parspec Black
+    title_family: "{typography.family_exhibit}"   # Source Serif 4 — formal financials register
+    rationale: |
+      The Q1-26 Board Finance Appendix decks (IB Exhibits + Plain Tables, June
+      2026) organically converged on a banker-exhibit register: navy header band
+      (#0B2545 ≈ steel.700), cool-grey table fill (#CBD3DB ≈ slate.200), muted
+      green/red deltas (#2E7D52 / #B23A36), Arial+Georgia type. v2.1.0 sanctions
+      this as a distinct 4th surface — but in Montserrat + Source Serif, not
+      Arial + Georgia. Brand narrative decks STAY dark (brand_artifacts); the
+      financial appendix is its own light surface. A 60-row exhibit is unreadable
+      and un-exportable on a dark slide; forcing it there was the core tension.
+      The financial TABLE itself sits on a paper-warm panel (see components.table_exhibit)
+      — the same panel material used on dark narrative slides, so the
+      paper_warm_panel_only invariant is preserved.
 
 # ────────────────────────────────────────────────────────────────────
 # PRIMITIVES — Raw scales
@@ -229,6 +287,8 @@ primitives:
     # complement) — slate is grayscale-cool with a subtle blue cast.
     slate:
       50:  "#F1F5F9"  # neutral_subtle_surface — product-UI panel tint
+      100: "#E2E8F0"  # ★ NEW v2.1.0 — subtotal/total band in exhibit tables
+      200: "#CBD5E1"  # ★ NEW v2.1.0 — heavy rule / total underline; matches Board Appendix fill #CBD3DB
       300: "#94A3B8"  # info_on_dark for neutral data, body chrome on dark
       500: "#475569"  # info_on_light for neutral data; passes AA at 6.77:1 on off-white
       700: "#334155"  # data-secondary deep, table-header on light
@@ -248,6 +308,15 @@ primitives:
     amber:
       500: "#B45309"  # ★ Caution Amber — status.warn anchor; ΔL22 from CTA orange
       600: "#D97706"  # warn_on_dark — passes AA at 5.12:1 on Parspec Black
+
+    # ★ NEW v2.1.0 — Banker-delta: muted green/red for ± deltas in financial
+    # tables ONLY (investor_exhibit surface). Empirical from Q1-26 Board Appendix.
+    # delta_neg is a CARVE-OUT of red_markup_monopoly — red=negative is a hard
+    # finance convention. Softer than ember_red #B91C1C so it never reads as a
+    # markup/REV stamp. Locked semantic — never decorative, never in chart series.
+    status:
+      table_delta_pos: "#2E7D52"  # muted banker green — positive Δ; 4.9:1 on paper-warm
+      table_delta_neg: "#B23A36"  # muted banker red — negative Δ; 5.1:1 on paper-warm
 
     # Legacy v1 secondaries — flagged for evolution.
     # Kept as primitives for backward-compat with brand-2026-Q1-original artifacts.
@@ -355,6 +424,21 @@ roles:
   chart_5_dark:  "{teal.100}"        # Pale teal tint (decorative chart layer only)
   chart_6_dark:  "{off_white}"       # Off-white as 6th series
 
+  # ─── Exhibit table chrome — investor_exhibit surface ★ NEW v2.1.0 ───
+  # Codifies the Q1-26 Board Appendix register. The table panel material
+  # (paper-warm) is identical on light-exhibit AND dark-narrative slides; only
+  # the surrounding slide chrome changes. See components.table_exhibit.
+  table_header_exhibit: "{neutral.850}"   # charcoal #2E2E2E header band — primary-axis neutral (D004 chose B over steel navy)
+  table_header_rule:    "{brand.500}"     # ★ 2px Brand-Orange keyline under the header — the brand signal. A keyline is NOT a CTA, so cta_color_monopoly is unaffected
+  table_header_text:    "{neutral.0}"     # white on charcoal
+  table_panel:          "{paper.warm}"    # vellum table surface (panel — invariant safe)
+  table_row_alt:        "{paper.warm_50}" # zebra stripe
+  table_border:         "{slate.300}"     # hairline grid
+  table_total_band:     "{slate.100}"     # subtotal / total row fill
+  table_total_rule:     "{slate.200}"     # heavy underline above totals
+  table_delta_pos:      "{status.table_delta_pos}"  # muted banker green — positive Δ
+  table_delta_neg:      "{status.table_delta_neg}"  # muted banker red — negative Δ (carve-out in red_markup_monopoly)
+
 # ────────────────────────────────────────────────────────────────────
 # SEMANTIC TOKENS
 # ────────────────────────────────────────────────────────────────────
@@ -386,7 +470,20 @@ tokens:
 
   typography:
     family: "Montserrat"
+    # ★ NEW v2.1.0 — first serif in the brand. Exhibit / financial TITLES ONLY
+    # (investor_exhibit surface). Source Serif 4 = the chosen version of the
+    # Georgia the Q1-26 bankers reached for; embeds clean for print/AP. Body,
+    # UI, display, and ALL numerals stay Montserrat. Never use serif on dark
+    # brand_artifacts slides — exhibit surface only.
+    family_exhibit: "Source Serif 4"
+    family_exhibit_fallback: "Georgia, 'Times New Roman', serif"
+    family_exhibit_cdn: "https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
     weights_used: [400, 500, 600, 700, 800, 900]
+    # ★ NEW v2.1.0 — tabular + lining numerals for financial tables. Montserrat
+    # supports tnum/lnum; this aligns decimal columns (the biggest credibility
+    # miss for board numbers). mono_for_metrics stays false — no mono pairing.
+    financial_figures: { family: "Montserrat", weight: 500, font_feature_settings: '"tnum" 1, "lnum" 1' }
+    exhibit_title:     { family: exhibit, weight: 600, size_clamp: "clamp(1.1rem, 2.2vw, 1.75rem)", line_height: 1.15, letter_spacing: "0" }
     # Tightened scale (v1.1.0) — explicit letter_spacing per step.
     # Linear/Vercel pattern: tight typography carries semantic-only color
     # without motion/illustration as a carry-layer. Required precondition
@@ -509,6 +606,30 @@ components:
     border:     "1px solid {neutral.800}"
     radius:     "{radii.component}"
     padding:    "{spacing.lg}"
+
+  # ★ NEW v2.1.0 — investor financial table. The single table component for
+  # board/IB exhibits. Drops onto EITHER an investor_exhibit slide (off-white
+  # ground) OR a dark brand_artifacts slide (Parspec Black ground) — the panel
+  # is identical; only the slide behind it changes. Frame with corner-bracket
+  # motif on dark slides so it reads "spec sheet," not "pasted screenshot."
+  table_exhibit:
+    source: "Q1-26 Board Finance Appendix empirical + 2.1.0 lock"
+    panel_background: "{table_panel}"          # paper.warm — vellum
+    header_background: "{table_header_exhibit}" # charcoal #2E2E2E band
+    header_rule:       "2px solid {table_header_rule}"  # ★ Brand-Orange keyline under header — the brand signal
+    header_color:      "{table_header_text}"    # white
+    header_font_family: "{typography.family_exhibit}"  # Source Serif 4 — formal
+    header_font_weight: 600
+    row_alt_background: "{table_row_alt}"        # paper.warm_50 zebra
+    border:            "1px solid {table_border}"  # slate.300 hairline
+    total_row_background: "{table_total_band}"   # slate.100
+    total_rule:        "2px solid {table_total_rule}"  # slate.200 above totals
+    figures:           "{typography.financial_figures}"  # tabular + lining nums
+    delta_positive:    "{table_delta_pos}"
+    delta_negative:    "{table_delta_neg}"
+    radius:            "{radii.element}"         # 2px — crisp, banker; NEVER rounded
+    cell_padding:      "8px 12px"
+    align_numeric:     "right"                   # numbers right-aligned, decimal-locked
 
 # ────────────────────────────────────────────────────────────────────
 # VOICE
@@ -639,8 +760,8 @@ invariants:
 
   # ★ NEW v2.0.0 — added from 2-agent lock collaboration ★
   red_markup_monopoly:
-    rule: "Engineering Red #B91C1C appears ONLY in error/markup/REV-stamp roles (status_error_*, drawing-block REV stamps). Never decorative, never in chart palette, never as a brand accent."
-    rationale: "The drawing-block-header signature collapses if red leaks into chart series or button hover states. Same construction as cta_color_monopoly. Locking the rule prevents the next CMO/designer from re-litigating in 18 months."
+    rule: "Engineering Red #B91C1C appears ONLY in error/markup/REV-stamp roles (status_error_*, drawing-block REV stamps). Never decorative, never in chart palette, never as a brand accent. CARVE-OUT (v2.1.0): table_delta_neg #B23A36 (a softer, distinct hue) may color negative numbers in investor_exhibit financial tables — red=negative is a hard finance convention. The two reds are deliberately different hexes so a negative figure never reads as a markup/REV stamp."
+    rationale: "The drawing-block-header signature collapses if red leaks into chart series or button hover states. Same construction as cta_color_monopoly. The financial-negative carve-out is bounded to the investor_exhibit surface and a separate hex — it does not dilute the markup-red signal on engineering artifacts."
     severity: "error"
   warn_not_brand:
     rule: "roles.status_warn_* MUST resolve to amber.500 / amber.600 (Caution Amber). Never brand.500 (Brand Orange)."
@@ -656,5 +777,15 @@ invariants:
     severity: "warning"
   steel_is_doc_register:
     rule: "Steel-Petrol (steel.500 #205991) appears ONLY in info_* / link_* / doc-metadata / schedule-header / drawing-block-header roles. Never in chart series without info semantics. Never as a brand accent."
-    rationale: "Steel = Blueprint Blue narrative job (engineering authority + document specificity). Teal = brand cool complement (chart cool, soft accent). Slate = cool-neutral utility (body chrome, table borders). Three cools, three named jobs — collapse the role-locking and we're back in v1's swatch-book mess."
+    rationale: "Steel = Blueprint Blue narrative job (engineering authority + document specificity). Teal = brand cool complement (chart cool, soft accent). Slate = cool-neutral utility (body chrome, table borders). Three cools, three named jobs — collapse the role-locking and we're back in v1's swatch-book mess. (v2.1.0 considered steel.700 as the exhibit header band but D004 chose charcoal + Brand-Orange keyline instead — steel stays pure doc-register.)"
+    severity: "warning"
+
+  exhibit_tabular_figures:
+    rule: "Any financial / numeric table on the investor_exhibit surface (or a paper-warm data panel on a dark slide) MUST render numerals with font-feature-settings tnum + lnum (tokens.typography.financial_figures). Proportional/old-style figures are forbidden in financial tables."
+    rationale: "Proportional figures mis-align decimal columns — the single biggest credibility loss for board-facing numbers. Tabular lining figures are table stakes for audited-financials register. Montserrat supports tnum/lnum so no font swap is needed."
+    severity: "error"
+
+  serif_exhibit_only:
+    rule: "family_exhibit (Source Serif 4) is permitted ONLY for exhibit/financial titles on the investor_exhibit surface. Never on dark brand_artifacts slides, never for body text, never for numerals (numbers stay Montserrat tabular)."
+    rationale: "The serif is a narrow, deliberate signal of 'formal financials' — diluting it into body or onto brand decks erodes Montserrat's status as the single brand voice and reintroduces the Arial+Georgia drift the board decks fell into."
     severity: "warning"
