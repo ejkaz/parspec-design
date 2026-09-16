@@ -4,8 +4,8 @@
 <!--
     AUTO-GENERATED FROM design-model.yaml — DO NOT EDIT MANUALLY
     Regenerate: python3 scripts/generate-brand-portal.py
-    Generated: 2026-05-04 21:57 UTC
-    design-model.yaml version: 2.0.0 · brand_version: 2026-Q3-v1
+    Generated: 2026-09-16 21:23 UTC
+    design-model.yaml version: 2.2.0 · brand_version: 2026-Q3-v1
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -127,7 +127,7 @@ h3.subsection { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.005em;
   <div class="portal-header-inner">
     <div class="portal-mark">
       <strong>PARSPEC</strong>
-      <span class="portal-meta">Brand Portal · v2.0.0 · 2026-Q3-v1</span>
+      <span class="portal-meta">Brand Portal · v2.2.0 · 2026-Q3-v1</span>
     </div>
     <nav class="portal-nav"><a class="portal-nav-item active" href="index.html">Overview</a><a class="portal-nav-item" href="color.html">Color</a><a class="portal-nav-item" href="logo.html">Logo & Motifs</a><a class="portal-nav-item" href="typography.html">Typography</a><a class="portal-nav-item" href="co-brand.html">Co-brand Rules</a></nav>
   </div>
@@ -140,7 +140,7 @@ h3.subsection { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.005em;
 
 <div class="callout">
   <div class="eyebrow">Active version</div>
-  <p style="margin:0;">Schema version <strong>2.0.0</strong> · Brand version <strong>2026-Q3-v1</strong> · Updated <strong>2026-05-04</strong> by <strong>eric@parspec.io</strong>.</p>
+  <p style="margin:0;">Schema version <strong>2.2.0</strong> · Brand version <strong>2026-Q3-v1</strong> · Updated <strong>2026-09-16</strong> by <strong>eric@parspec.io</strong>.</p>
 </div>
 
 <h2 class="section">What's here</h2>
@@ -173,7 +173,55 @@ h3.subsection { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.005em;
 </div>
 
 <h2 class="section">Latest changelog</h2>
-<pre style="background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: var(--gap-md); white-space: pre-wrap; line-height: 1.6; font-size: 0.85rem; color: var(--fg-muted); font-family: inherit;">v1.0.0 — Initial brand v1 captured from the March 2026 Parspec Brand Guide PDF.
+<pre style="background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; padding: var(--gap-md); white-space: pre-wrap; line-height: 1.6; font-size: 0.85rem; color: var(--fg-muted); font-family: inherit;">v2.2.0 — Umber layer ramp (ADDITIVE; brand_version unchanged). The Sept-2026
+company master deck ("Parspec Overview") ships a theme whose
+accents 3–5 are desaturated dark oranges (#5A3F1C / #392917 / #261E15) used
+for layered architecture blocks, funnel steps and solution panels on black.
+Codified as primitives.colors.umber + roles layer_fill_on_dark{,_deep,_deepest}
+so decks reference the ramp instead of hex literals. Dark surfaces only —
+umber is a fill, never type, never a CTA (orange keeps the monopoly).
+
+v2.1.0 — Investor-exhibit surface (D004). Empirical convergence from the
+Q1-26 Board Finance Appendix decks (IB Exhibits + Plain Tables, June 2026):
+bankers organically built financial tables on a navy-header / cool-grey-fill /
+muted-status register that is ~entirely steel + slate (families already in
+v2.0.0) — same convergence pattern as the BVIN evidence that drove v1.2/v2.
+Changes (all ADDITIVE — no locked primary-axis or existing token altered):
+  - NEW surface `investor_exhibit` (light, off-white bg) — sanctions a 4th
+    surface for board financials / IB exhibits / cohort + ARR tables.
+    Brand decks STAY dark; the financial appendix is its own light surface.
+  - UNIFIER: paper-warm is now "the table panel material" in BOTH contexts —
+    dark narrative slide (Parspec Black bg → paper-warm table panel) AND
+    investor_exhibit (off-white bg → paper-warm table panel). Same table
+    component drops onto either ground; only slide chrome differs. The
+    `paper_warm_panel_only` invariant is UNCHANGED — a table panel is a panel.
+  - NEW serif `family_exhibit = Source Serif 4` (Georgia fallback) — exhibit /
+    financial TITLES only. First serif in the brand; the *chosen* version of
+    the Georgia the bankers reached for. Body/UI/figures stay Montserrat.
+  - NEW `typography.financial_figures` — tabular + lining numerals (tnum/lnum)
+    for any financial table. Column mis-alignment was the biggest credibility
+    miss (mono_for_metrics stays false; Montserrat carries tnum).
+  - NEW slate stops .100 #E2E8F0 (subtotal/total band) + .200 #CBD5E1 (heavy
+    rule; matches deck fill #CBD3DB).
+  - NEW table roles (table_header_exhibit → neutral.850 charcoal,
+    table_header_rule → brand.500 orange keyline, table_panel → paper.warm,
+    table_row_alt, table_border, table_total_band, table_delta_pos/neg) +
+    `components.table_exhibit`.
+  - HEADER DECISION (D004): the source decks used navy (#0B2545 ≈ steel.700);
+    we instead chose a charcoal band + 2px Brand-Orange keyline (option B) —
+    stays in the primary-axis neutral family and carries the brand's one
+    signal color as an accent line. A keyline is NOT a CTA fill, so
+    cta_color_monopoly is unaffected. Steel stays pure doc-register.
+  - NEW status table_delta_pos #2E7D52 / table_delta_neg #B23A36 — muted banker
+    green/red for ± deltas (the decks' own hexes).
+  - 1 NEW invariant `exhibit_tabular_figures` (error); `red_markup_monopoly`
+    amended with a financial-negative-red carve-out (red=negative is a hard
+    finance convention; carved, not broken). `steel_is_doc_register` left
+    intact (the considered steel-header carve-out was dropped with option B).
+  - PENDING CEO sign-off: the serif addition + investor_exhibit surface
+    (mirrors v2.0.0's lock-pending-ratification pattern).
+
+v1.0.0 — Initial brand v1 captured from the March 2026 Parspec Brand Guide PDF.
 Secondaries (Blueprint Blue #6270F2, Violet #8F6EF0, Deep Rose #BE123C) and
 pastel tints flagged in `avoid` because precedent research showed 0 of 27 ICP
 brands use this register.

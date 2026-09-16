@@ -473,6 +473,8 @@ def build_typography(model: dict) -> str:
                 f'</div>'
             )
             continue
+        if not isinstance(spec, dict):  # family_exhibit* (v2.1.0) are plain strings
+            continue
 
         weight = spec.get("weight", 400)
         size = spec.get("size_clamp", "1rem")
