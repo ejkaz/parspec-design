@@ -116,6 +116,24 @@ def build(profile: str, out: Path) -> Path:
         ("Question three?", "Proof point headline", "Supporting detail."),
     ], pal)
 
+    # scorecard (bands + qualitative)
+    s = d.content("Our Scorecard:", accent="Where We Stand", eyebrow="Readiness", style="eyebrow")
+    sh.band_scorecard(s, X0, 1.42, XW, [
+        dict(name="Metric one", why="Why it matters", value="000%", num=115, trend="▲ from 000%",
+             bands=(100, 110, 120), bands_text=["<100%", "100–110%", "110–120%", "120%+"],
+             target="Target: 120%+"),
+        dict(name="Metric two", why="Lower is better", value="0.0x", num=1.8, bands=(2.0, 1.5, 1.0),
+             higher_better=False, bands_text=[">2.0x", "1.5–2.0x", "1.0–1.5x", "<1.0x"]),
+        dict(name="Metric three", why="Judgment override", value="00%", num=50, bands=(40, 60, 80),
+             status=0, target="Target: 60%+"),
+    ], pal, row_h=0.6)
+    s = d.content("Our Scorecard:", accent="Beliefs", eyebrow="Readiness", style="eyebrow")
+    sh.status_rows(s, X0, 1.5, XW, [
+        dict(name="Belief one", evidence="Evidence with a source.", zone=3, next="Next step"),
+        dict(name="Belief two", evidence="Evidence with a source.", zone=1, next="Next step"),
+        dict(name="Belief three", evidence="Evidence with a source.", zone=0, next="Next step"),
+    ], pal)
+
     q = d.divider("Ask", accent="anything", kicker="Q&A", tagline="Nothing is off-limits.",
                   footnote=[("Ask live, or anonymously: ", {}), d.placeholder("[form link]")])
     d.notes(q, "Speaker notes land here — sources and [CONFIRM] flags.")

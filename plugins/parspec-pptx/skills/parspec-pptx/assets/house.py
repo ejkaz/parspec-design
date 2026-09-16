@@ -238,8 +238,25 @@ class HouseDeck:
         sh.text(s, self.x0, y, self.xw, 0.26, text, size=11, color=self.pal.muted)
 
     # ── slide recipes ────────────────────────────────────────────────
-    def content(self, title: str, *, accent=None, eyebrow=None, subtitle=None, glow=True):
-        """Titled content slide. master: glow=False gives the plain black layout."""
+    def content(self, title: str, *, accent=None, eyebrow=None, subtitle=None, glow=True,
+                style=None):
+        """Titled content slide. master: glow=False gives the plain black layout.
+
+        style="eyebrow" (master): the master deck's other title register — orange
+        caps eyebrow + 24pt bold mixed-case title on the plain cover layout, as in
+        its 'Parspec at a Glance' slides and CEO outline decks built from them.
+        """
+        if style == "eyebrow" and self.p.name == "master":
+            s = self.slide("cover", keep=())
+            if eyebrow:
+                sh.text(s, 0.45, 0.29, 6.0, 0.22, eyebrow.upper(), size=12, color=self.pal.accent,
+                        font="Montserrat SemiBold")
+            sh.text(s, 0.45, 0.56, 9.15, 0.5,
+                    [[(title + (" " if accent else ""), {}), (accent or "", {"color": self.pal.accent})]],
+                    size=24, bold=True, color=self.pal.text)
+            if subtitle:
+                self.subtitle(s, subtitle, y=1.08)
+            return s
         s = self.slide("content" if glow else "plain")
         if eyebrow:
             self.eyebrow(s, eyebrow)

@@ -37,6 +37,8 @@ The subtitle is the "so-what" line: one sentence, 11 pt muted.
 | M5 | Bracketed 2×2 | `sh.bracket_box(…, fill=pal.card)` ×4 + label + quote + context | "What we've heard" — customer or stakeholder themes |
 | M6 | Umber funnel | `sh.funnel(s, levels, pal, ramp="umber")` | Pipelines; the last level is the point |
 | M7 | KV band | `sh.shape(RECTANGLE, fill=pal.card, line=pal.card_line)` + 3 × label/value | Timing, size, owner under a card row |
+| M9 | Band scorecard | `sh.band_scorecard(s, X0, 1.42, XW, rows, row_h=0.46–0.65)` | Metrics vs a Below / Acceptable / Strong / Top-tier bar; status = shape + label |
+| M10 | Belief scorecard | `sh.status_rows(s, X0, 1.5, XW, rows)` | Qualitative proven / building / unproven with evidence + next step |
 | M8 | Closing | `d.divider("Ask me", accent="anything", kicker="Open Q&A", tagline=…)` | Q&A, "partner with us" |
 
 ### M2 — numbered cards
@@ -77,6 +79,25 @@ for i, (lab, quote, ctx) in enumerate(cells):
 ```
 
 Use `sh.crosshair(s, x, y, pal)` sparingly: one registration mark at a group corner, not one per card.
+
+### M9 / M10 — scorecards
+
+```python
+d.content("Our Scorecard:", accent="Where We Stand", eyebrow="Series B readiness", style="eyebrow")
+sh.band_scorecard(s, X0, 1.42, XW, [
+    dict(name="Net revenue retention", why="Proxy for product-market fit", value="000%", num=0,
+         trend="▼ from 000%", bands=(100, 110, 120), bands_text=["<100%", …], target="Hold 120%+"),
+    dict(name="Burn multiple", why="Cash per $1 of new ARR", value="0.0x", num=0,
+         bands=(2.0, 1.5, 1.0), higher_better=False),          # lower-is-better flips the track
+], pal, row_h=0.46)                                            # ≤7 rows at 0.46; ≤5 at 0.6+
+```
+
+- `bands` = entry thresholds (acceptable, strong, top-tier). The zones draw at equal width (ordinal) and the marker sits proportionally inside its zone.
+- `status=` overrides the computed zone when judgment differs (e.g. a metric judged on a different bar). Say why in the `why` line.
+- Status always carries **shape + label** (● strong/top-tier, ▲ acceptable, ■ below bar) in status-role colors. The brand's amber and red fail colorblind separation, so never rely on color alone. Status labels use text ink; the shape carries the color.
+- `trend` is a muted line under the value: direction only, no color.
+- `style="eyebrow"` gives the master deck's second title register (orange caps eyebrow + 24 pt bold title), which matches CEO outline decks built from the master.
+- Speaker notes must carry each band's source and each value's basis. Use a `BASIS` switch when two definitions compete (e.g. gross vs net new ARR).
 
 ---
 

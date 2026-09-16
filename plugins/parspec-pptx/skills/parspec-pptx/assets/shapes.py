@@ -25,6 +25,10 @@ Primitives
     problem_solution() numbered problem boxes -> connector -> umber stat panels
     bracket_box()      CAD corner brackets around a region
     crosshair()        CAD registration "+" mark
+
+    scorecard:
+    band_scorecard()   metric rows on a Below/Acceptable/Strong/Elite track with a
+                       status marker (shape + label, never color alone)
 """
 
 from __future__ import annotations
@@ -60,6 +64,8 @@ class Palette:
     text: RGBColor         # text_dark_primary
     muted: RGBColor        # text_dark_tertiary    (town hall #9CA3AF / #9E9E9E)
     good: RGBColor         # status_success_on_dark (town hall #4ADE80)
+    warn: RGBColor         # status_warn_on_dark    (caution amber — never brand orange)
+    bad: RGBColor          # status_error_on_dark
     panel: RGBColor        # surface_dark_panel    (master #2E2E2E rows at 35%)
     subtle: RGBColor       # text_dark_secondary   (master #C9C9C9 captions)
     layer: RGBColor        # layer_fill_on_dark          (master theme accent3 #5A3F1C)
@@ -73,6 +79,7 @@ class Palette:
             bg=b.surface_dark, card=b.surface_dark_alt, card_line=b.surface_dark_panel,
             accent=b.cta, accent_deep=b.accent_type_on_light, text=b.text_dark_primary,
             muted=b.text_dark_tertiary, good=b.status_success_on_dark,
+            warn=b.status_warn_on_dark, bad=b.status_error_on_dark,
             panel=b.surface_dark_panel, subtle=b.text_dark_secondary,
             layer=b.layer_fill_on_dark, layer_deep=b.layer_fill_on_dark_deep,
             layer_deepest=b.layer_fill_on_dark_deepest,
@@ -462,3 +469,135 @@ def problem_solution(slide, x, y, w, rows, pal: Palette, *, h=1.02, gap=0.13, le
              bold=True, color=pal.accent, anchor="b")
         text(slide, rx + 0.2, ry + 0.58, rw - 0.35, h - 0.62, body, size=10.5,
              color=pal.text, line_spacing=1.08)
+
+
+# ── scorecard ────────────────────────────────────────────────────────
+ZONES = ("Below bar", "Acceptable", "Strong", "Top-tier")
+STATUS = {  # zone index -> (label, palette attr, marker shape)
+    0: ("Below bar", "bad", MSO_SHAPE.RECTANGLE),
+    1: ("Acceptable", "warn", MSO_SHAPE.ISOSCELES_TRIANGLE),
+    2: ("Strong", "good", MSO_SHAPE.OVAL),
+    3: ("Top-tier", "good", MSO_SHAPE.OVAL),
+}
+
+
+def band_zone(value: float, bands, higher_better=True) -> tuple[int, float]:
+    """Return (zone 0-3, position 0-1 across the 4-zone track).
+
+    bands = (acceptable, strong, elite) thresholds, each the entry point of its
+    zone. Zones are drawn equal-width (ordinal), the value sits proportionally
+    inside its zone; values past the elite threshold pin toward the right end.
+    """
+    a, st, e = bands
+    edges = [a - (st - a), a, st, e, e + (e - st)]
+    if not higher_better:
+        value, edges = -value, [-x for x in edges]
+    z = 0 if value < edges[1] else 1 if value < edges[2] else 2 if value < edges[3] else 3
+    lo, hi = edges[z], edges[z + 1]
+    frac = 0.0 if hi == lo else (value - lo) / (hi - lo)
+    frac = min(max(frac, 0.08), 0.92)
+    return z, (z + frac) / 4
+
+
+def band_scorecard(slide, x, y, w, rows, pal: Palette, *, row_h=0.58, name_w=2.35,
+                   value_w=1.1, status_w=1.45, header=True, zone_labels=ZONES):
+    """Scorecard rows. rows = [dict(name, why, value, num, bands, higher_better=True,
+    target=None, status=None, bands_text=None)].
+
+    - `value` is the display string; `num` the number used for placement.
+    - `bands` = (acceptable, strong, elite) entry thresholds.
+    - `status` overrides the computed zone (0-3) when judgment differs from the bands.
+    - `bands_text` = 4 short labels printed under the track (e.g. "<$8M", "$8M", ...).
+    - `trend` = short muted line under the value ("▲ from $6.78M"); direction only, no color.
+    Status carries shape + label + color (good ●, acceptable ▲, below ■).
+    """
+    track_x = x + name_w + value_w + 0.2
+    track_w = w - name_w - value_w - status_w - 0.4
+    if header:
+        label(slide, x, y, name_w, "Metric", pal, color=pal.muted, size=8)
+        label(slide, x + name_w, y, value_w, "Parspec", pal, color=pal.muted, size=8)
+        zw = track_w / 4
+        for i, zl in enumerate(zone_labels):
+            text(slide, track_x + i * zw, y, zw, 0.2, zl.upper(), size=7.5, bold=True,
+                 color=pal.muted, align="c")
+        label(slide, track_x + track_w + 0.2, y, status_w, "Status", pal, color=pal.muted, size=8)
+        y += 0.28
+    fills = [pal.card, pal.layer_deepest, pal.layer_deep, pal.layer]
+    for i, r in enumerate(rows):
+        ry = y + i * row_h
+        if i:
+            rule(slide, x, ry - 0.04, w, pal.card_line)
+        text(slide, x, ry + 0.02, name_w - 0.1, 0.24, r["name"], size=11.5, bold=True,
+             color=pal.text)
+        if r.get("why"):
+            text(slide, x, ry + 0.27, name_w - 0.1, 0.24, r["why"], size=8, color=pal.muted)
+        if r.get("trend"):
+            text(slide, x + name_w, ry + 0.01, value_w, 0.28, r["value"], size=16, bold=True,
+                 color=pal.text)
+            text(slide, x + name_w, ry + 0.3, value_w, 0.18, r["trend"], size=7.5,
+                 color=pal.muted)
+        else:
+            text(slide, x + name_w, ry, value_w, row_h - 0.1, r["value"], size=16, bold=True,
+                 color=pal.text, anchor="m")
+        zone, pos = band_zone(r["num"], r["bands"], r.get("higher_better", True))
+        if r.get("status") is not None:
+            zone = r["status"]
+        compact = row_h < 0.55
+        ty = ry + (0.08 if compact else 0.13)
+        zw = track_w / 4
+        for k in range(4):
+            shape(slide, MSO_SHAPE.RECTANGLE, track_x + k * zw + (0.015 if k else 0), ty,
+                  zw - (0.015 if k else 0), 0.14, fill=fills[k])
+        if r.get("bands_text"):
+            for k, bt in enumerate(r["bands_text"]):
+                text(slide, track_x + k * zw, ty + (0.19 if compact else 0.22), zw, 0.16, bt,
+                     size=7, color=pal.muted, align="c")
+        lab, attr, kind = STATUS[zone]
+        col = getattr(pal, attr)
+        m = 0.2
+        mx = track_x + pos * track_w - m / 2
+        shape(slide, kind, mx - 0.03, ty + 0.07 - m / 2 - 0.03, m + 0.06, m + 0.06, fill=pal.bg)
+        shape(slide, kind, mx, ty + 0.07 - m / 2, m, m, fill=col)
+        sx = track_x + track_w + 0.2
+        shape(slide, kind, sx, ry + 0.09, 0.13, 0.13, fill=col)
+        text(slide, sx + 0.22, ry + 0.04, status_w - 0.22, 0.22, lab.upper(), size=9,
+             bold=True, color=pal.text)  # text wears text ink; the shape carries status
+        if r.get("target"):
+            text(slide, sx + 0.22, ry + 0.27, status_w - 0.22, 0.22, r["target"], size=8,
+                 color=pal.muted)
+    return y + len(rows) * row_h
+
+
+def status_rows(slide, x, y, w, rows, pal: Palette, *, row_h=0.66, name_w=2.9,
+                status_w=1.9, labels=("Unproven", "Building", "Proven", "Proven"),
+                headers=("What investors must believe", "Our evidence", "Status")):
+    """Qualitative scorecard: rows = [dict(name, evidence, zone 0-3, next=None)].
+
+    Same status grammar as band_scorecard (■ / ▲ / ●, shape + label + color),
+    with an evidence column instead of a band track.
+    """
+    ev_x = x + name_w
+    ev_w = w - name_w - status_w - 0.2
+    if headers:
+        label(slide, x, y, name_w, headers[0], pal, color=pal.muted, size=8)
+        label(slide, ev_x, y, ev_w, headers[1], pal, color=pal.muted, size=8)
+        label(slide, ev_x + ev_w + 0.2, y, status_w, headers[2], pal, color=pal.muted, size=8)
+        y += 0.28
+    for i, r in enumerate(rows):
+        ry = y + i * row_h
+        if i:
+            rule(slide, x, ry - 0.05, w, pal.card_line)
+        text(slide, x, ry, name_w - 0.2, row_h - 0.1, r["name"], size=12, bold=True,
+             color=pal.text, line_spacing=1.05)
+        text(slide, ev_x, ry, ev_w, row_h - 0.1, r["evidence"], size=10, color=pal.subtle,
+             line_spacing=1.1)
+        _, attr, kind = STATUS[r["zone"]]
+        col = getattr(pal, attr)
+        sx = ev_x + ev_w + 0.2
+        shape(slide, kind, sx, ry + 0.05, 0.13, 0.13, fill=col)
+        text(slide, sx + 0.22, ry, status_w - 0.22, 0.22, labels[r["zone"]].upper(), size=9,
+             bold=True, color=pal.text)
+        if r.get("next"):
+            text(slide, sx + 0.22, ry + 0.22, status_w - 0.22, row_h - 0.3, r["next"], size=8,
+                 color=pal.muted, line_spacing=1.05)
+    return y + len(rows) * row_h
