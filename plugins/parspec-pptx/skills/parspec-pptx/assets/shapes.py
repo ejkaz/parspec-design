@@ -603,3 +603,70 @@ def status_rows(slide, x, y, w, rows, pal: Palette, *, row_h=0.66, name_w=2.9,
             text(slide, sx + 0.22, ry + 0.22, status_w - 0.22, row_h - 0.3, r["next"], size=8,
                  color=pal.muted, line_spacing=1.05)
     return y + len(rows) * row_h
+
+
+
+def est_lines(t: str, size: float, width: float) -> int:
+    """Rough wrapped-line count for Montserrat (avg glyph ≈ 0.56 em)."""
+    import math
+    return max(1, math.ceil(len(t) * size * 0.52 / 72 / max(width, 0.1)))
+
+
+def hero_cards(slide, x, y, w, h, cards, pal: Palette, *, gap=0.22, value_size=32):
+    """Editorial metric cards (master idiom): one hero value, meaning, basis — status in words.
+
+    cards = [dict(label, value, sub=None, meaning=None, basis=None, note=None,
+                  ref=None, priority=None)]
+    - `label`   orange caps kicker (what this card is about: EXPANSION, SCALE…)
+    - `value`   hero number; `sub` names it or adds a secondary figure ("ARR · +88% YoY")
+    - `meaning` one plain-English sentence; `basis` period/definition; `note` qualifier
+    - `ref`     benchmark comparison written out ("Benchmark: under 2x · we're above it")
+    - `why`     "Why investors care" line (bottom block) — pairs the metric with its reason
+    - `priority` what the company is working on (a bottom block, only when given)
+    No tracks, no traffic lights: every qualification is written next to its value.
+    """
+    cw = (w - gap * (len(cards) - 1)) / len(cards)
+    for i, c in enumerate(cards):
+        cx, tx, tw = x + i * (cw + gap), x + i * (cw + gap) + 0.24, cw - 0.48
+        shape(slide, MSO_SHAPE.RECTANGLE, cx, y, cw, h, fill=pal.card, line=pal.card_line)
+        rule(slide, cx, y, cw, pal.accent, h=0.05)
+        label(slide, tx, y + 0.24, tw, c["label"], pal, size=10)
+        text(slide, tx, y + 0.46, tw, 0.62, c["value"], size=value_size, bold=True, color=pal.text)
+        cy = y + 0.46 + value_size / 72 * 1.25
+        for key, sz, col, bold, pad in (("sub", 12, pal.subtle, True, 0.1),
+                                        ("meaning", 11.5, pal.text, False, 0.12),
+                                        ("basis", 10, pal.muted, False, 0.04),
+                                        ("note", 10, pal.subtle, False, 0.04)):
+            if c.get(key):
+                hh = est_lines(c[key], sz, tw) * sz / 72 * 1.22
+                text(slide, tx, cy, tw, hh, c[key], size=sz, bold=bold, color=col,
+                     line_spacing=1.05)
+                cy += hh + pad
+        if c.get("why"):
+            by = y + h - 0.72
+            rule(slide, tx, by, tw, pal.card_line)
+            text(slide, tx, by + 0.12, tw, 0.5,
+                 [[("Why investors care: ", {"bold": True, "color": pal.accent}), (c["why"], {})]],
+                 size=10.5, color=pal.subtle, line_spacing=1.05)
+        if c.get("ref") or c.get("priority"):
+            by = y + h - (1.02 if c.get("ref") and c.get("priority") else 0.62)
+            rule(slide, tx, by, tw, pal.card_line)
+            by += 0.12
+            if c.get("ref"):
+                text(slide, tx, by, tw, 0.36, c["ref"], size=10.5, color=pal.subtle,
+                     line_spacing=1.05)
+                by += 0.42
+            if c.get("priority"):
+                text(slide, tx, by, tw, 0.4,
+                     [[("Priority: ", {"bold": True, "color": pal.accent}), (c["priority"], {})]],
+                     size=11, color=pal.text, line_spacing=1.05)
+
+
+def state_chip(slide, x, y, word, pal: Palette, *, w=None):
+    """A word-only status chip (BUILDING / TO PROVE / PROVEN) on an umber pill."""
+    w = w or 0.2 + 0.085 * len(word)
+    shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, 0.24, fill=pal.layer_deep,
+          line=pal.accent_deep, lw=0.5, adj=[0.5])
+    text(slide, x, y, w, 0.24, word.upper(), size=8.5, bold=True, color=pal.text, align="c",
+         anchor="m")
+    return w

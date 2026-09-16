@@ -39,6 +39,8 @@ The subtitle is the "so-what" line: one sentence, 11 pt muted.
 | M7 | KV band | `sh.shape(RECTANGLE, fill=pal.card, line=pal.card_line)` + 3 × label/value | Timing, size, owner under a card row |
 | M9 | Band scorecard | `sh.band_scorecard(s, X0, 1.42, XW, rows, row_h=0.46–0.65)` | Metrics vs a Below / Acceptable / Strong / Top-tier bar; status = shape + label |
 | M10 | Belief scorecard | `sh.status_rows(s, X0, 1.5, XW, rows)` | Qualitative proven / building / unproven with evidence + next step |
+| M11 | Hero cards | `sh.hero_cards(s, X0, y, XW, h, cards)` | Editorial metric cards: label, big value, meaning, basis, why / benchmark / priority. Status in words; no tracks |
+| M12 | Word chip | `sh.state_chip(s, x, y, "Building")` | Evidence state without traffic-light colour (umber pill) |
 | M8 | Closing | `d.divider("Ask me", accent="anything", kicker="Open Q&A", tagline=…)` | Q&A, "partner with us" |
 
 ### M2 — numbered cards
@@ -79,6 +81,13 @@ for i, (lab, quote, ctx) in enumerate(cells):
 ```
 
 Use `sh.crosshair(s, x, y, pal)` sparingly: one registration mark at a group corner, not one per card.
+
+### Scorecards for a firmwide room (Astra design review, 2026-09-16)
+
+- An editorial deck wants **hero cards (M11) or a 3×2 graded card grid**, not a 7×5 band table. The dense `band_scorecard` suits appendices and board packs.
+- **Grade against an explicit rubric:** At reference (● green) / Building or Verify (▲ yellow) / Gap (■ red). Colour lives only in the status symbol; the orange top rule stays brand furniture. Write the rubric in a small legend plus "directional references, not pass/fail tests".
+- **Don't grade what you can't compare:** show it as context (e.g. ARR with no sourced floor) or mark it VERIFY (definitions differ).
+- **One reference set across slides:** the "how the bar changed" slide and the scorecard must quote the same benchmarks.
 
 ### M9 / M10 — scorecards
 
