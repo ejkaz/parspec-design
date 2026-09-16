@@ -508,7 +508,8 @@ def band_scorecard(slide, x, y, w, rows, pal: Palette, *, row_h=0.58, name_w=2.3
     - `bands` = (acceptable, strong, elite) entry thresholds.
     - `status` overrides the computed zone (0-3) when judgment differs from the bands.
     - `bands_text` = 4 short labels printed under the track (e.g. "<$8M", "$8M", ...).
-    - `trend` = short muted line under the value ("▲ from $6.78M"); direction only, no color.
+    - `trend` = short line under the value, in words ("Up from $6.78M"). Never ▲/▼ —
+      the triangle already means "acceptable".
     Status carries shape + label + color (good ●, acceptable ▲, below ■).
     """
     track_x = x + name_w + value_w + 0.2
@@ -522,7 +523,8 @@ def band_scorecard(slide, x, y, w, rows, pal: Palette, *, row_h=0.58, name_w=2.3
                  color=pal.muted, align="c")
         label(slide, track_x + track_w + 0.2, y, status_w, "Status", pal, color=pal.muted, size=8)
         y += 0.28
-    fills = [pal.card, pal.layer_deepest, pal.layer_deep, pal.layer]
+    # brighter than the card surface so zones survive a projector (critic, 2026-09-16)
+    fills = [pal.panel, pal.layer_deep, pal.layer, pal.accent_deep]
     for i, r in enumerate(rows):
         ry = y + i * row_h
         if i:
@@ -534,8 +536,8 @@ def band_scorecard(slide, x, y, w, rows, pal: Palette, *, row_h=0.58, name_w=2.3
         if r.get("trend"):
             text(slide, x + name_w, ry + 0.01, value_w, 0.28, r["value"], size=16, bold=True,
                  color=pal.text)
-            text(slide, x + name_w, ry + 0.3, value_w, 0.18, r["trend"], size=7.5,
-                 color=pal.muted)
+            text(slide, x + name_w, ry + 0.3, value_w + 0.15, 0.18, r["trend"], size=8,
+                 color=pal.subtle)
         else:
             text(slide, x + name_w, ry, value_w, row_h - 0.1, r["value"], size=16, bold=True,
                  color=pal.text, anchor="m")
@@ -564,7 +566,7 @@ def band_scorecard(slide, x, y, w, rows, pal: Palette, *, row_h=0.58, name_w=2.3
              bold=True, color=pal.text)  # text wears text ink; the shape carries status
         if r.get("target"):
             text(slide, sx + 0.22, ry + 0.27, status_w - 0.22, 0.22, r["target"], size=8,
-                 color=pal.muted)
+                 color=pal.subtle)
     return y + len(rows) * row_h
 
 
