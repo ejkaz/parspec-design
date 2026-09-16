@@ -298,7 +298,7 @@ class HouseDeck:
         return s
 
     def divider(self, heading: str, minutes: str | None = None, *, accent=None, kicker=None,
-                strip=None, active=None, tagline: str | None = None, footnote=None):
+                strip=None, active=None, tagline: str | None = None, footnote=None, size=None):
         """Section divider.
 
         master: glow layout, 33pt caps heading (+ accent phrase), optional kicker
@@ -312,7 +312,7 @@ class HouseDeck:
             runs = [(self._case(heading) + (" " if accent else ""), {"color": pal.text})]
             if accent:
                 runs.append((self._case(accent), {"color": pal.accent}))
-            sh.text(s, 0, 0, 0, 0, [runs], size=33, target=ph, line_spacing=1.05)
+            sh.text(s, 0, 0, 0, 0, [runs], size=size or 33, target=ph, line_spacing=1.05)
             ph.text_frame.margin_left = Inches(0.1)
             if kicker:
                 sh.text(s, 0.72, 1.78, 6, 0.25, kicker.upper(), size=12, color=pal.text)
@@ -345,8 +345,12 @@ class HouseDeck:
             sh.section_strip(s, strip, pal, active=active)
         return s
 
-    def agenda(self, items, *, heading=("TODAY'S", "AGENDA"), blurb="", eyebrow=None):
-        """items: [(title, descriptor, minutes)]. Numbered — an agenda is a sequence."""
+    def agenda(self, items, *, heading=("TODAY'S", "AGENDA"), blurb="", eyebrow=None,
+               highlight=None):
+        """items: [(title, descriptor, minutes)]. Numbered — an agenda is a sequence.
+
+        highlight: index of the row that should read as the climax (master: accent title).
+        """
         pal = self.pal
         if self.p.name == "master":
             s = self.slide("plain", keep=())
@@ -362,8 +366,9 @@ class HouseDeck:
                 sh.text(s, x, yy, 0.6, rh, f"{i + 1:02d}", size=20, bold=True,
                         color=pal.accent, anchor="m")
                 sh.text(s, x + 0.75, yy, 3.9, rh,
-                        [[(d.upper(), {"size": 9, "color": pal.subtle})], [(t, {})]],
-                        size=15, color=pal.text, anchor="m")
+                        [[(d.upper(), {"size": 9, "color": pal.subtle})],
+                         [(t, {"bold": i == highlight})]],
+                        size=15, color=pal.accent if i == highlight else pal.text, anchor="m")
                 sh.text(s, x + 4.6, yy, 0.9, rh, m, size=11, color=pal.accent, anchor="m",
                         align="r")
                 sh.rule(s, x, yy + rh - 0.005, 5.5, pal.card_line)

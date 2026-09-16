@@ -209,14 +209,21 @@ def chip_row(slide, x, y, w, h, items, pal: Palette, *, gap=0.15, head_size=12.5
 
 
 def funnel(slide, levels, pal: Palette, *, cx=2.55, top=1.42, h=0.8, gap=0.08,
-           widths=(4.1, 3.35, 2.6, 1.85), label_x=5.0, label_w=4.5, ramp="alpha"):
+           widths=(4.1, 3.35, 2.6, 1.85), label_x=5.0, label_w=4.5, ramp="alpha",
+           proportional=False, min_width=1.2):
     """Narrowing funnel. levels: [(value, label, detail)], widest first.
 
     ramp="alpha": accent at stepped alpha (town hall 10/18/32%).
     ramp="umber": solid umber deepest -> layer (master deck theme).
     Either way the last level is solid accent with dark type — the stage the
     slide is about.
+    proportional=True scales each top width to its numeric value (widest =
+    widths[0]), floored at min_width so the label still fits — honest encoding
+    when the counts are the message.
     """
+    if proportional:
+        vals = [float(str(v).replace(",", "").lstrip("$").rstrip("%+")) for v, _, _ in levels]
+        widths = [max(min_width, widths[0] * v / max(vals)) for v in vals]
     n = len(levels) - 1
     if ramp == "umber":
         fills = [pal.layer_deepest, pal.layer_deep, pal.layer][-n:] if n <= 3 else \
@@ -354,39 +361,48 @@ def bracket_box(slide, x, y, w, h, pal: Palette, *, arm=0.18, color=None, fill=N
         shape(slide, MSO_SHAPE.RECTANGLE, cx if sx > 0 else cx - t, vy, t, arm, fill=c)
 
 
-def tile_row(slide, x, y, w, h, tiles, pal: Palette, *, gap=0.3, value_size=26):
-    """Overview tiles: tiles=[(LABEL, value, body)]. Master 'at a glance' pattern."""
+def tile_row(slide, x, y, w, h, tiles, pal: Palette, *, gap=0.3, value_size=26, emphasis=None):
+    """Overview tiles: tiles=[(LABEL, value, body)]. Master 'at a glance' pattern.
+
+    emphasis: index of the lead metric — its value renders in accent and larger.
+    """
     tw = (w - gap * (len(tiles) - 1)) / len(tiles)
     for i, (lab, value, body) in enumerate(tiles):
         tx = x + i * (tw + gap)
         shape(slide, MSO_SHAPE.RECTANGLE, tx, y, tw, h, fill=pal.card, line=pal.card_line)
         rule(slide, tx, y - 0.005, tw, pal.accent, h=0.02)
         label(slide, tx + 0.18, y + 0.25, tw - 0.3, lab, pal, size=10)
-        text(slide, tx + 0.18, y + 0.62, tw - 0.3, 0.55, value, size=value_size, bold=True,
-             color=pal.text)
+        lead = i == emphasis
+        text(slide, tx + 0.18, y + 0.62, tw - 0.3, 0.55, value,
+             size=value_size * (1.25 if lead else 1), bold=True,
+             color=pal.accent if lead else pal.text)
         text(slide, tx + 0.18, y + 1.35, tw - 0.3, h - 1.45, [runs(body)], size=10,
              color=pal.subtle, line_spacing=1.1)
 
 
 def numbered_cards(slide, x, y, w, h, items, pal: Palette, *, gap=0.15, highlight=None,
-                   dim=(), number_size=36):
+                   dim=(), number_size=36, focus=False):
     """Success-criteria / path-to-go-live cards.
 
     items: [dict(num, title, tag=None, lead=None, body=str|list)].
     `tag` sits between title and rule (durations, 'WE ARE HERE');
     `lead` is an accent headline above the body ('≥80%').
     highlight: index drawn on the lighter panel; dim: indices drawn muted.
+    focus=True (with highlight): only the highlighted card keeps the accent;
+    the others get a neutral bar and white numeral, so "where we are" is the
+    single orange signal. Leave False for flat lists (success criteria).
     """
     cw = (w - gap * (len(items) - 1)) / len(items)
     for i, it in enumerate(items):
         cx = x + i * (cw + gap)
         muted = i in dim
+        neutral = focus and highlight is not None and i != highlight and not muted
         shape(slide, MSO_SHAPE.RECTANGLE, cx, y, cw, h,
               fill=pal.panel if i == highlight else pal.card, line=pal.card_line)
-        rule(slide, cx, y, cw, pal.muted if muted else pal.accent, h=0.06)
-        acc = pal.muted if muted else pal.accent
+        acc = pal.muted if (muted or neutral) else pal.accent
+        rule(slide, cx, y, cw, acc, h=0.06)
         text(slide, cx + 0.18, y + 0.17, cw - 0.3, 0.62, str(it["num"]), size=number_size,
-             bold=True, color=acc)
+             bold=True, color=pal.text if neutral else acc)
         text(slide, cx + 0.18, y + 0.8, cw - 0.3, 0.55, it["title"], size=13, bold=True,
              color=pal.muted if muted else pal.text, line_spacing=1.05)
         if it.get("tag"):
