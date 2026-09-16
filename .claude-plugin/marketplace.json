@@ -37,7 +37,7 @@
     },
     {
       "name": "parspec-pptx",
-      "description": "PowerPoint .pptx generation skill. Reads design-model.yaml from parspec-design and emits editable .pptx via python-pptx. Two registers: brand_artifacts (board memos, IC decks — 12 layouts, corner-bracket chrome) and townhall (builds on the company's local town hall template so slides paste into all-hands decks — KPI tiles, funnels, process chevrons, question/evidence rows, section strips, triple-arc motif). Headless LibreOffice render loop; PowerPoint daemon optional.",
+      "description": "PowerPoint .pptx generation skill. Reads design-model.yaml from parspec-design and emits editable .pptx via python-pptx. House register builds on local company deck templates so slides paste into company decks (profiles: master — Sept-2026 master deck format, default; townhall) with numbered cards, panel rows, problem-to-solution rows, umber funnels, chevrons, KPI tiles and CAD brackets. brand_artifacts register for standalone board memos (12 layouts). Headless LibreOffice render loop; PowerPoint daemon optional.",
       "source": "./plugins/parspec-pptx",
       "category": "productivity",
       "tags": ["presentations", "pptx", "powerpoint", "python-pptx", "board-deck", "town-hall", "diagrams", "parspec"]

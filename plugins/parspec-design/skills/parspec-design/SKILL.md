@@ -1,7 +1,7 @@
 ---
 name: parspec-design
 description: "Parspec brand SSoT and evolution workflow. Use when the user wants to inspect, update, evolve, or roll back the Parspec brand — colors, typography, motion, voice, or the design-model.yaml itself. Triggers include 'show parspec brand', 'update parspec brand', 'evolve parspec palette', 'parspec design model', 'roll back brand to <tag>', '/parspec-design'. The skill maintains design-model.yaml — the single file every other Parspec skill (parspec-slides, parspec-pptx, parspec-craft, parspec-review) reads."
-version: 0.1.1
+version: 0.2.0
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, WebFetch]
 ---
 

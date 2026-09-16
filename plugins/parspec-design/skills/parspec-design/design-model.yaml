@@ -5,16 +5,24 @@
 # ════════════════════════════════════════════════════════════════════
 
 meta:
-  version: "2.1.0"
+  version: "2.2.0"
   brand_version: "2026-Q3-v1"
   source: "Parspec Brand v1 + BVIN slide 5 empirical evidence + 2-agent lock collaboration (Brand Marketer × Graphics Designer, May 2026) + Q1-26 Board Finance Appendix empirical convergence (June 2026)"
-  updated: "2026-06-02"
+  updated: "2026-09-16"
   updated_by: "eric@parspec.io"
   status: "ratified"
   ratified: "2026-05-04"
   ratified_by: "eric@parspec.io"
-  supersedes: "2.0.0"
+  supersedes: "2.1.0"
   notes: |
+    v2.2.0 — Umber layer ramp (ADDITIVE; brand_version unchanged). The Sept-2026
+    company master deck ("Parspec Overview") ships a theme whose
+    accents 3–5 are desaturated dark oranges (#5A3F1C / #392917 / #261E15) used
+    for layered architecture blocks, funnel steps and solution panels on black.
+    Codified as primitives.colors.umber + roles layer_fill_on_dark{,_deep,_deepest}
+    so decks reference the ramp instead of hex literals. Dark surfaces only —
+    umber is a fill, never type, never a CTA (orange keeps the monopoly).
+
     v2.1.0 — Investor-exhibit surface (D004). Empirical convergence from the
     Q1-26 Board Finance Appendix decks (IB Exhibits + Plain Tables, June 2026):
     bankers organically built financial tables on a navy-header / cool-grey-fill /
@@ -262,6 +270,14 @@ primitives:
     # Designer R2 — interpolated mids muddy at 12px on charcoal ground).
     # Narrative job: chart cool / soft accent / brand cool complement (warm-cyan,
     # ocean register). Lives in both modes; product-UI hero secondary.
+    # ★ NEW v2.2.0 — Umber: Brand Orange taken toward black at constant hue.
+    # Empirical source: Sept-2026 master deck theme accents 3–5. Fills for
+    # layered diagram blocks / funnel steps / solution panels on dark only.
+    umber:
+      700: "#5A3F1C"  # layer_fill_on_dark — system-of-record bars, top funnel step
+      800: "#392917"  # layer_fill_on_dark_deep
+      900: "#261E15"  # layer_fill_on_dark_deepest — solution panels
+
     teal:
       50:  "#E0F4F5"  # cool_subtle_surface role
       100: "#A2C4C9"  # ★ Pale Teal — BVIN slide 5 anchor (deployed). Dark-mode chart tint only — fails AA on light at 1.66:1
@@ -388,6 +404,9 @@ roles:
   surface_dark:              "{neutral.950}"      # brand_artifacts mode background (Parspec Black)
   surface_dark_panel:        "{neutral.850}"      # Charcoal layering surface
   surface_dark_alt:          "{neutral.900}"
+  layer_fill_on_dark:        "{umber.700}"        # ★ v2.2.0 — #5A3F1C layered blocks on dark
+  layer_fill_on_dark_deep:   "{umber.800}"        # ★ v2.2.0 — #392917
+  layer_fill_on_dark_deepest: "{umber.900}"       # ★ v2.2.0 — #261E15 solution panels
   surface_light:             "{neutral.200}"      # product_ui mode background (Off-white)
   surface_light_alt:         "{neutral.100}"
   surface_doc:               "{neutral.0}"        # documents mode (pure White — AP systems expect)

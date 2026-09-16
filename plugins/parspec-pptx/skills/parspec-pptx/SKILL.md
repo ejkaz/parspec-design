@@ -1,6 +1,6 @@
 ---
 name: parspec-pptx
-description: "Generate Parspec-branded editable .pptx decks via python-pptx, reading the design-model.yaml SSoT. Two registers: (1) brand_artifacts — 13.333in canvas, corner brackets, 12 layouts (L1–L12) for board memos and IC decks; (2) townhall — builds on the company's own town hall Google Slides template (logo, footer, page numbers; 10in canvas) with a diagram library: KPI tiles, funnels, process chevrons, question cards, question-to-evidence rows, numbered section strips, the triple-arc motif. Headless LibreOffice render + PNG verify loop (PowerPoint daemon optional). Use when the deliverable must open or be edited natively in PowerPoint, Keynote or Google Slides — board decks, all-hands / town hall sections, CEO updates, IC memos. Triggers: 'parspec pptx', 'parspec powerpoint', 'board deck for parspec', 'town hall slides', 'all-hands deck', '/parspec-pptx', 'editable pptx with parspec brand'."
+description: "Generate Parspec-branded editable .pptx decks via python-pptx, reading the design-model.yaml SSoT. Two registers: (1) house — builds on a company deck used as a template (logo, footer, page numbers, layout backgrounds; 10in canvas). Profiles: master (default; the Sept-2026 master deck — black + warm glow, ALL-CAPS titles with an orange phrase, numbered cards, panel rows, problem→solution rows, umber funnels, CAD brackets) and townhall (Q2-26 town hall — left-bar cards, KPI tiles, chevrons, section strips). (2) brand_artifacts — 13.333in canvas, drawn chrome, L1–L12 for standalone board memos. Headless LibreOffice render + PNG verify loop (PowerPoint optional). Use when the deliverable must open or be edited in PowerPoint, Keynote or Google Slides — all-hands / town hall sections, CEO and fundraising updates, sales decks, board decks. Triggers: 'parspec pptx', 'parspec powerpoint', 'board deck for parspec', 'town hall slides', 'all-hands deck', 'use our new deck format', '/parspec-pptx', 'editable pptx with parspec brand'."
 version: 0.3.0
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion]
 ---
@@ -15,28 +15,38 @@ Brand contract: reads `../parspec-design/skills/parspec-design/design-model.yaml
 
 | Register | Canvas | Chrome | Use for | Entry point |
 |---|---|---|---|---|
-| **townhall** | 10 × 5.625 in (Google Slides default) | The company's own town hall master: PARSPEC logo, confidentiality footer, page numbers | All-hands / town hall sections, CEO updates, anything that gets pasted into the company Google Slides deck or edited there | `assets/townhall.py` `TownHall` + `assets/shapes.py` · recipes in `references/townhall-layouts.md` |
-| **brand_artifacts** | 13.333 × 7.5 in | Drawn: corner brackets, footer label | Board memos, IC decks, customer attachments that stand alone | `assets/builder.py` · recipes in `references/layouts.md` |
+| **house** | 10 × 5.625 in (Google Slides default) | A company deck's own master: PARSPEC logo, confidentiality footer, page numbers, layout backgrounds | Anything internal or that sits next to company slides: all-hands sections, CEO / fundraising updates, sales decks | `assets/house.py` `HouseDeck(profile=…)` + `assets/shapes.py` · recipes in `references/house-layouts.md` |
+| **brand_artifacts** | 13.333 × 7.5 in | Drawn: corner brackets, footer label | Standalone board memos, IC decks, customer attachments | `assets/builder.py` · recipes in `references/layouts.md` |
 
-Default to **townhall** when the deck is internal or will live next to existing company slides — it matches what people already see. Both registers take every color from design-model.yaml roles.
+### House profiles
 
-### The town hall template (company-internal — never commit it)
+| Profile | Source deck | Look | Default |
+|---|---|---|---|
+| **master** | Sept-2026 company master deck ("Parspec Overview") | Pure black with a warm glow, ALL-CAPS 25 pt light titles with a trailing orange phrase, no eyebrow; numbered cards with orange top bars, translucent panel rows, problem → solution rows, umber layer fills, CAD corner brackets | **yes** — the current company format |
+| **townhall** | Q2-26 town hall | #0F0F0F, bold mixed-case titles with an eyebrow, left-accent-bar cards, KPI tiles, chevrons, numbered section strips | legacy; use when adding to a town hall built on that master |
 
-The template is the latest town hall export with its slides and extra masters stripped. It is proprietary and this repo is public, so it lives only on the machine:
+When the user points at a newer company deck ("use our updated formatting"), regenerate that profile's template from it first. If its layouts differ, add a profile to `PROFILES` in `assets/house.py` rather than hard-coding a one-off deck. Every color still comes from design-model.yaml roles; the umber ramp (v2.2.0) was added for the master profile's layer fills.
+
+### House templates (company-internal — never commit them)
+
+A template is a company deck export with its slides and every other master stripped. Templates are proprietary and this repo is public (`*.pptx` is gitignored), so they live only on the machine:
 
 ```bash
-# export the latest town hall from Google Slides as .pptx, then:
-python3 scripts/make_template.py "Parspec Townhall - <quarter>.pptx"
-# -> ~/Documents/Claude/Templates/parspec_townhall_template.pptx  (override: $PARSPEC_PPTX_TEMPLATE)
+python3 scripts/make_template.py --profile master   "<master deck export>.pptx"
+python3 scripts/make_template.py --profile townhall "Parspec Townhall - <quarter>.pptx"
+# -> ~/Documents/Claude/Templates/parspec_{master,townhall}_template.pptx
+#    overrides: $PARSPEC_PPTX_MASTER_TEMPLATE / $PARSPEC_PPTX_TEMPLATE
 ```
 
-Re-run it after each town hall so decks track the current chrome. The script auto-picks the master that has every layout in `townhall.LAYOUTS` and fails loudly if Google renamed them.
+The script auto-picks the master that carries every layout the profile needs and fails loudly if they were renamed. Master-profile layouts: `TITLE_ONLY_1_1` cover, `CUSTOM_5` divider (glow corners), `CUSTOM_6_2` content (full glow), `CUSTOM_2` plain black.
 
-Template gotchas (already handled by `TownHall`, listed so ad-hoc code doesn't relearn them):
-- The master's `DEFAULT` layout is **white**. Use `blank` (`CUSTOM_2`) for a dark footer-only slide.
-- `add_slide` never copies the slide-number field; `TownHall.slide()` re-adds it.
-- Setting only `.top` on an inheriting placeholder writes `left=0`. Use `TownHall.place()`, which writes all four values.
-- The cover/divider body placeholders indent their text ~0.15 in; `cover()` compensates so subtitles align with the title.
+Template gotchas (handled by `HouseDeck`; listed so ad-hoc code doesn't relearn them):
+- Both masters' `DEFAULT` layout is **white**; the master deck's `BLANK` layout draws a second footer on top of the master's. Don't build on either.
+- `add_slide` never copies the slide-number field, and the master deck's glow layouts have none. `HouseDeck.slide()` copies it from the layout or, failing that, from the master.
+- Setting only `.top` on an inheriting placeholder writes `left=0`. Use `HouseDeck.place()`, which writes all four values.
+- Town hall cover/divider body placeholders indent text ~0.15 in; `cover()` compensates.
+- Master covers draw the logo from the master footer's full-resolution wordmark (`HouseDeck.logo()`), so no logo file is needed.
+- Master-deck text uses Montserrat Light / Medium / SemiBold. Install those weights (`~/Library/Fonts`) or soffice previews substitute.
 
 ## When to use this vs. parspec-slides
 
@@ -114,19 +124,19 @@ If user says "edit this deck" or "fix slide N", clarify whether they want the ex
 
 ### Phase 2 — Pick the register
 
-Style is locked by design-model.yaml; the only choice is the register (table above). If the user points at existing company decks for "inspiration", that means townhall — regenerate the template from the newest export first. Confirm in one sentence.
+Style is locked by design-model.yaml; the only choices are the register and the house profile (tables above). If the user points at existing company decks for "inspiration", that means the house register: find the newest company deck, render it to a contact sheet, and regenerate or add the matching profile before building. Confirm in one sentence.
 
 ### Phase 3 — Generate
 
 Sequential (single-agent) by default.
 
-**townhall register:**
+**house register:**
 
-1. Copy `scripts/townhall_example.py` next to the deliverable (it exercises every recipe)
-2. Read `references/townhall-layouts.md`; pick a recipe per slide (T1–T11)
-3. `TownHall().cover() / .agenda() / .divider() / .content()` give each slide its chrome; compose bodies with `assets.shapes` inside the content band (`TOP`=1.42 to `BOTTOM`=4.95 in)
-4. Put sources and `[CONFIRM]` flags in speaker notes (`th.notes(slide, ...)`), and unknowns on-slide as `th.placeholder("[Round size]")`
-5. Import path: set `PARSPEC_PPTX_SKILL`, or resolve the newest `~/.claude/plugins/cache/parspec-design/parspec-pptx/*/skills/parspec-pptx` (see the example's header)
+1. Copy `scripts/house_example.py` next to the deliverable (it exercises every recipe; `--profile master|townhall`)
+2. Read `references/house-layouts.md`; pick a recipe per slide
+3. `HouseDeck(profile).cover() / .agenda() / .divider() / .content()` give each slide its chrome; compose bodies with `assets.shapes` inside the content band (`deck.top` → `deck.bottom`, left edge `deck.x0`, width `deck.xw`)
+4. Put sources and `[CONFIRM]` flags in speaker notes (`deck.notes(slide, ...)`), and unknowns on-slide as `deck.placeholder("[Round size]")`
+5. Import path: set `PARSPEC_PPTX_SKILL`, or resolve the newest `~/.claude/plugins/cache/parspec-design/parspec-pptx/*/skills/parspec-pptx` that has `assets/house.py`
 
 **brand_artifacts register:**
 
@@ -184,14 +194,15 @@ parspec-craft lint <generated.pptx>
 |---|---|
 | `assets/brand.py` | Loads `design-model.yaml`, resolves `{ref.path}` tokens, exposes `Brand.cta`, `Brand.surface_paper`, etc. as `RGBColor` |
 | `assets/builder.py` | Low-level helpers: `new_deck`, `blank`, `add_text`, `add_rect`, `add_line`, `corner_brackets`, `footer`, motif accents |
-| `assets/shapes.py` | Canvas-agnostic composition + diagram primitives and the role-based `Palette`: `text`, `shape` (alpha), `card`, `kpi_tile`, `chip_row`, `funnel`, `process`, `question_cards`, `evidence_rows`, `section_strip`, `arcs` |
-| `assets/townhall.py` | `TownHall` — opens the local town hall template; `cover`, `agenda`, `divider`, `content`, `eyebrow`, `title`, `notes`, `placeholder` |
+| `assets/shapes.py` | Canvas-agnostic composition + diagram primitives on the role-based `Palette`: `text`, `shape` (alpha), `rule`, `card`, `kpi_tile`, `chip_row`, `funnel` (alpha / umber), `process`, `question_cards`, `evidence_rows`, `section_strip`, `arcs`, and master-format `tile_row`, `numbered_cards`, `panel_rows`, `problem_solution`, `bracket_box`, `crosshair` |
+| `assets/house.py` | `HouseDeck(profile)` + `PROFILES` — opens a local house template; `cover`, `agenda`, `divider`, `content`, `title`, `eyebrow`, `logo`, `notes`, `placeholder` |
+| `assets/townhall.py` | Back-compat `TownHall` = `HouseDeck("townhall")` |
 | `assets/__init__.py` | One-line package import surface |
 | `references/layouts.md` | brand_artifacts recipes L1–L12 |
-| `references/townhall-layouts.md` | townhall recipes T1–T11 |
+| `references/house-layouts.md` | house recipes: shared chrome, master M1–M8, townhall T1–T8 |
 | `scripts/init_deck.py` | brand_artifacts starter — copy and edit |
-| `scripts/townhall_example.py` | townhall starter + smoke test (sample content only) |
-| `scripts/make_template.py` | Town hall export → local template (slides and extra masters stripped) |
+| `scripts/house_example.py` | house starter + smoke test, both profiles (sample content only) |
+| `scripts/make_template.py` | Company deck export → local template for a profile (slides and extra masters stripped) |
 | `scripts/render.sh` | .pptx → PDF → per-slide PNGs (soffice default; PowerPoint optional) |
 | `daemon/ppt_render_daemon.py` | Keep-alive PowerPoint subprocess for fast render cycles |
 
