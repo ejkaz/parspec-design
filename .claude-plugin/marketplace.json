@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "parspec-design",
-  "description": "Parspec brand stack — three composable Claude Code skills that compile a single brand SSoT (design-model.yaml) into Parspec-branded slides, ICP-credible craft rules, and per-surface generation. Built for Construction Materials Distributors.",
+  "description": "Parspec brand stack — composable Claude Code skills that compile a single brand SSoT (design-model.yaml) into Parspec-branded slides, ICP-credible craft rules, and per-surface generation. Built for Construction Materials Distributors.",
   "owner": {
     "name": "ejkaz",
     "url": "https://github.com/ejkaz"
@@ -37,10 +37,10 @@
     },
     {
       "name": "parspec-pptx",
-      "description": "PowerPoint .pptx generation skill. Reads design-model.yaml from parspec-design and emits board-ready editable .pptx via python-pptx — the right output when the deliverable must open natively in PowerPoint/Keynote (board decks, IC memos, sales-conference handouts). 8-layout library + paper-warm panel motif + corner-bracket signature + a macOS PowerPoint render daemon (open-keep-alive) for fast iterate-and-verify cycles.",
+      "description": "PowerPoint .pptx generation skill. Reads design-model.yaml from parspec-design and emits editable .pptx via python-pptx. Two registers: brand_artifacts (board memos, IC decks — 12 layouts, corner-bracket chrome) and townhall (builds on the company's local town hall template so slides paste into all-hands decks — KPI tiles, funnels, process chevrons, question/evidence rows, section strips, triple-arc motif). Headless LibreOffice render loop; PowerPoint daemon optional.",
       "source": "./plugins/parspec-pptx",
       "category": "productivity",
-      "tags": ["presentations", "pptx", "powerpoint", "python-pptx", "board-deck", "parspec"]
+      "tags": ["presentations", "pptx", "powerpoint", "python-pptx", "board-deck", "town-hall", "diagrams", "parspec"]
     }
   ]
 }

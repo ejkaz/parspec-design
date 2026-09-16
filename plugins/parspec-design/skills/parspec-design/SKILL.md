@@ -1,13 +1,13 @@
 ---
 name: parspec-design
-description: "Parspec brand SSoT and evolution workflow. Use when the user wants to inspect, update, evolve, or roll back the Parspec brand — colors, typography, motion, voice, or the design-model.yaml itself. Triggers include 'show parspec brand', 'update parspec brand', 'evolve parspec palette', 'parspec design model', 'roll back brand to <tag>', '/parspec-design'. The skill maintains design-model.yaml — the single file every other Parspec skill (parspec-slides, parspec-craft) reads."
-version: 0.1.0
+description: "Parspec brand SSoT and evolution workflow. Use when the user wants to inspect, update, evolve, or roll back the Parspec brand — colors, typography, motion, voice, or the design-model.yaml itself. Triggers include 'show parspec brand', 'update parspec brand', 'evolve parspec palette', 'parspec design model', 'roll back brand to <tag>', '/parspec-design'. The skill maintains design-model.yaml — the single file every other Parspec skill (parspec-slides, parspec-pptx, parspec-craft, parspec-review) reads."
+version: 0.1.1
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, WebFetch]
 ---
 
 # Parspec Design
 
-Brand SSoT skill. Owns `design-model.yaml` — the single file that defines Parspec's visual identity. Every other Parspec skill (parspec-slides, parspec-craft) reads this file. Brand changes happen here; downstream skills auto-adapt.
+Brand SSoT skill. Owns `design-model.yaml` — the single file that defines Parspec's visual identity. Every other Parspec skill (parspec-slides, parspec-pptx, parspec-craft, parspec-review) reads this file. Brand changes happen here; downstream skills auto-adapt.
 
 ## Identity
 
@@ -24,7 +24,7 @@ Parspec sells AI-native operating software (quoting / submittals / project manag
 | `brand-orange` | `#FFA72B` | Primary CTA — monopoly. Never used elsewhere. |
 | Typography | **Montserrat** (single family) | All text. No other font ever. |
 
-Signature motifs: corner brackets (CAD viewfinder), quarter circles, single-color orange line illustrations on dark, yellow blurs over UI screenshots.
+Signature motifs: corner brackets (CAD viewfinder), quarter circles (the town hall triple-arc is this family), single-color orange line illustrations on dark, the drawing-block header, soft yellow blurs behind product UI screenshots.
 
 ## What's in design-model.yaml
 
@@ -45,7 +45,7 @@ Signature motifs: corner brackets (CAD viewfinder), quarter circles, single-colo
 
 When user says "show me the Parspec brand" or similar:
 1. Read `design-model.yaml`
-2. Summarize `meta` (version, brand_version, supersedes, notes), `primary_axis_preserved`, secondary palette, tints, voice
+2. Summarize `meta` (version, brand_version, supersedes, notes), `primary_axis_preserved`, hue families (orange ramp, teal, steel, slate), `roles`, `invariants`, voice
 3. If bundled previews exist at `previews/`, offer to open them
 
 ### Evolve
@@ -103,6 +103,10 @@ Tag every committed brand change:
 git tag -a brand-2026-Q3-v1 -m "Q3 brand evolution: D2+D4 hybrid (Modern Industrial-Tech + Submittal personality)"
 git push origin brand-2026-Q3-v1
 ```
+
+## Working with generic design skills
+
+When a general-purpose design skill (e.g. Anthropic's `frontend-design`) is loaded alongside a Parspec skill, **this file wins on color, typography and motifs** — those skills tell you to pick a fresh typeface and palette, and flag "near-black + one bright accent" as a generic tell, which is exactly Parspec's locked axis. Take their composition, hierarchy, restraint and copywriting guidance; take nothing that changes a token.
 
 ## What this skill does NOT do
 

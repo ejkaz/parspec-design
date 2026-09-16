@@ -130,6 +130,7 @@ ROLE_TOKENS = {
     # status
     "status_error_on_dark":  "status_error_on_dark",
     "status_warn_on_dark":   "status_warn_on_dark",
+    "status_success_on_dark": "status_success_on_dark",
 }
 
 

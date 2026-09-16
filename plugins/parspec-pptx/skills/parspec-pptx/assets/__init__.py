@@ -12,10 +12,17 @@ Usage from a deck-build script:
 
 The skill ships a helper `scripts/init_deck.py` template that handles the
 path-injection for you — copy + edit per deck.
+
+Two registers:
+    builder   — brand_artifacts canvas (13.333 x 7.5), corner brackets, drawn chrome
+    townhall  — the company town hall template (10 x 5.625), its own logo/footer;
+                compose bodies with `shapes` (funnel, process, KPI tiles, ...)
 """
 
-from . import brand, builder
+from . import brand, builder, shapes, townhall
 from .brand import Brand, load
+from .shapes import Palette
+from .townhall import TownHall
 from .builder import (
     SLIDE_W, SLIDE_H,
     new_deck, blank,
@@ -25,8 +32,8 @@ from .builder import (
 )
 
 __all__ = [
-    "brand", "builder",
-    "Brand", "load",
+    "brand", "builder", "shapes", "townhall",
+    "Brand", "load", "Palette", "TownHall",
     "SLIDE_W", "SLIDE_H",
     "new_deck", "blank",
     "add_text", "add_rect", "add_line",
