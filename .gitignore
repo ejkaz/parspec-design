@@ -16,3 +16,7 @@ node_modules/
 
 # Brand portal regen artifacts (regenerable, not source)
 # (kept tracked — they ARE the artifact)
+
+# Decks and company templates never belong in this public repo
+*.pptx
+*.key

@@ -130,6 +130,11 @@ ROLE_TOKENS = {
     # status
     "status_error_on_dark":  "status_error_on_dark",
     "status_warn_on_dark":   "status_warn_on_dark",
+    "status_success_on_dark": "status_success_on_dark",
+    # layered fills (umber ramp, v2.2.0)
+    "layer_fill_on_dark":         "layer_fill_on_dark",
+    "layer_fill_on_dark_deep":    "layer_fill_on_dark_deep",
+    "layer_fill_on_dark_deepest": "layer_fill_on_dark_deepest",
 }
 
 

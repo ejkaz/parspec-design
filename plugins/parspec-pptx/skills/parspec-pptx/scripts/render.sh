@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
-# parspec-pptx render — convert a .pptx to per-slide PNGs via PowerPoint.
+# parspec-pptx render — convert a .pptx to per-slide PNGs.
 #
 # Usage:
 #   render.sh <input.pptx> [out_dir] [dpi]
-#   PPTX_DIRECT=1 render.sh <input.pptx> [out_dir] [dpi]    # skip daemon
+#   PPTX_ENGINE=daemon render.sh <input.pptx> [out_dir] [dpi]   # PowerPoint
+#   PPTX_DIRECT=1 render.sh <input.pptx> [out_dir] [dpi]        # PowerPoint, no daemon
 #
-# Defaults: out_dir = /tmp/parspec-pptx-out,  dpi = 110
+# Defaults: out_dir = /tmp/parspec-pptx-out,  dpi = 110,  engine = soffice
 #
-# Two modes:
-#   1. Default: use the keep-alive daemon (3s per render once warm).
+# Engines:
+#   0. soffice (default): headless LibreOffice. No Office automation, no
+#      sandbox prompts; PowerPoint AppleScript `open` hangs in agent sessions
+#      in non-interactive sessions. Needs Montserrat installed or it
+#      substitutes a wider font — the script warns.
+#   1. daemon: keep-alive PowerPoint (3s per render once warm).
 #      Daemon needs Automation permission for PowerPoint — System Settings
 #      → Privacy → Automation → grant python3 access to PowerPoint.
 #   2. PPTX_DIRECT=1: foreground 3-call AppleScript pattern (~8s per render,
@@ -24,6 +29,8 @@ PPTX="${1:?usage: render.sh <input.pptx> [out_dir] [dpi]}"
 OUT_DIR="${2:-/tmp/parspec-pptx-out}"
 DPI="${3:-110}"
 DIRECT="${PPTX_DIRECT:-0}"
+ENGINE="${PPTX_ENGINE:-soffice}"
+[[ "$DIRECT" == "1" ]] && ENGINE="direct"
 
 if [[ ! -f "$PPTX" ]]; then
     echo "render.sh: file not found: $PPTX" >&2
@@ -39,8 +46,20 @@ PPTX_ABS="$(cd "$(dirname "$PPTX")" && pwd)/$(basename "$PPTX")"
 STEM="$(basename "$PPTX" .pptx)"
 PDF="$OUT_DIR/$STEM.pdf"
 
+# ── soffice mode: headless LibreOffice ────────────────────────────────
+if [[ "$ENGINE" == "soffice" ]]; then
+    command -v soffice >/dev/null || {
+        echo "render.sh: soffice not installed (brew install --cask libreoffice)" >&2; exit 1; }
+    # fc-list's cache lags fresh installs, so check the macOS font folders directly
+    if ! ls "$HOME/Library/Fonts" /Library/Fonts 2>/dev/null | grep -qi montserrat \
+        && ! { command -v fc-list >/dev/null && fc-list | grep -qi montserrat; }; then
+        echo "render.sh: WARNING Montserrat not installed — render will substitute a wider font" >&2
+    fi
+    soffice --headless --convert-to pdf --outdir "$OUT_DIR" "$PPTX_ABS" >/dev/null 2>&1 \
+        || { echo "render.sh: soffice conversion failed" >&2; exit 2; }
+    [[ -f "$PDF" ]] || { echo "render.sh: PDF not written" >&2; exit 2; }
 # ── direct mode: foreground osascript ─────────────────────────────────
-if [[ "$DIRECT" == "1" ]]; then
+elif [[ "$ENGINE" == "direct" ]]; then
     echo "render.sh: direct mode (no daemon)"
     PDF_ABS="$(cd "$(dirname "$PDF")" && pwd)/$(basename "$PDF")"
     # Quit any existing PowerPoint first to start clean

@@ -1,7 +1,7 @@
 {
   "name": "parspec-pptx",
-  "version": "0.2.0",
-  "description": "Parspec .pptx generation \u2014 board-ready PowerPoint decks built with python-pptx, reading the same design-model.yaml SSoT as parspec-slides. Outputs editable .pptx that PowerPoint and Keynote render natively, with a keep-alive render daemon for fast iteration.",
+  "version": "0.3.0",
+  "description": "Parspec .pptx generation \u2014 editable PowerPoint / Google Slides decks built with python-pptx from the design-model.yaml SSoT. House register builds on company deck templates (profiles: master \u2014 the Sept-2026 master deck format, default; townhall) with numbered cards, panel rows, problem-to-solution rows, umber funnels, process chevrons and KPI tiles. brand_artifacts register (13.333in, drawn chrome, L1\u2013L12) for standalone board memos. Headless LibreOffice render-and-verify loop; PowerPoint optional.",
   "author": {
     "name": "ejkaz",
     "url": "https://github.com/ejkaz"
@@ -10,11 +10,16 @@
   "repository": "https://github.com/ejkaz/parspec-design",
   "license": "MIT",
   "keywords": [
+    "all-hands",
+    "board-deck",
+    "diagrams",
+    "google-slides",
+    "house-template",
     "parspec",
-    "presentations",
-    "pptx",
     "powerpoint",
+    "pptx",
+    "presentations",
     "python-pptx",
-    "board-deck"
+    "town-hall"
   ]
 }

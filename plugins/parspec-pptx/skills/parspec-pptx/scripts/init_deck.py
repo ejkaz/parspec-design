@@ -14,10 +14,23 @@ import sys
 from pathlib import Path
 
 # ── wire up parspec-pptx ──────────────────────────────────────────────
-PPTX_SKILL = Path(
-    "/Users/eric/Desktop/Parspec.b/Vault/005_The_Lab/5.3_Automation_&_Scripts"
-    "/parspec-design/plugins/parspec-pptx/skills/parspec-pptx"
-)
+def _skill_dir() -> Path:
+    """$PARSPEC_PPTX_SKILL > this file's skill (when run in place) > newest installed plugin."""
+    import os
+    if os.environ.get("PARSPEC_PPTX_SKILL"):
+        return Path(os.environ["PARSPEC_PPTX_SKILL"]).expanduser()
+    here = Path(__file__).resolve().parents[1]
+    if (here / "assets" / "builder.py").exists():
+        return here
+    cache = Path.home() / ".claude/plugins/cache/parspec-design/parspec-pptx"
+    hits = sorted(cache.glob("*/skills/parspec-pptx"),
+                  key=lambda p: tuple(int(x) for x in p.parts[-3].split(".")))
+    if not hits:
+        sys.exit("parspec-pptx not found; set PARSPEC_PPTX_SKILL")
+    return hits[-1]
+
+
+PPTX_SKILL = _skill_dir()
 sys.path.insert(0, str(PPTX_SKILL))
 
 from assets import (  # noqa: E402
@@ -32,7 +45,7 @@ from pptx.enum.text import PP_ALIGN, MSO_ANCHOR  # noqa: E402
 
 # ── build ──────────────────────────────────────────────────────────────
 def build():
-    b = load()  # reads design-model.yaml v2.0.0 by default
+    b = load()  # reads the sibling parspec-design design-model.yaml
     prs = new_deck()
 
     # Example cover — replace with layout recipes from references/layouts.md
