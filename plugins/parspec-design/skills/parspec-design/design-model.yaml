@@ -5,7 +5,7 @@
 # ════════════════════════════════════════════════════════════════════
 
 meta:
-  version: "2.3.0"
+  version: "2.4.0"
   brand_version: "2026-Q3-v1"
   source: "Parspec Brand v1 + BVIN slide 5 empirical evidence + 2-agent lock collaboration (Brand Marketer × Graphics Designer, May 2026) + Q1-26 Board Finance Appendix empirical convergence (June 2026)"
   updated: "2026-10-23"
@@ -13,8 +13,14 @@ meta:
   status: "proposed"
   ratified: "2026-05-04"
   ratified_by: "eric@parspec.io"
-  supersedes: "2.2.0"
+  supersedes: "2.3.0"
   notes: |
+    v2.4.0 — Proposed investor / board register with native editable charts.
+    Additive investor_* roles, finance geometry/type and measured digit metrics.
+    Actual type stays white; forecast, positive/negative and highlighted marker
+    colors are scoped to this opt-in proposal. No global invariant is relaxed.
+    The default PPTX profile and ratified brand_version remain unchanged.
+
     v2.3.0 — Proposed sales register; additive and pending ratification.
     Keeps brand_version and all existing roles, surfaces and invariants unchanged.
     The opt-in sales profile records a pure-black ground, square top-rule cards,
@@ -397,6 +403,27 @@ roles:
   sales_status_good: "{sales.status_good}"
   sales_status_warn: "{amber.600}"
   sales_status_bad: "{roles.status_error_on_dark}"
+
+  # Proposed investor-only register. Explicit opt-in; global invariants unchanged.
+  investor_ground: "{neutral.950}"
+  investor_card: "{neutral.900}"
+  investor_band: "{sales.band}"
+  investor_row_alt: "{sales.row_alt}"
+  investor_text: "{neutral.0}"
+  investor_muted: "{neutral.500}"
+  investor_line: "{neutral.800}"
+  investor_accent: "{brand.500}"
+  investor_forecast_fill: "{umber.800}"
+  investor_positive: "{teal.300}"
+  investor_negative: "{status.table_delta_neg}"
+  investor_chart_1: "{brand.500}"
+  investor_chart_2: "{teal.300}"
+  investor_chart_3: "{umber.700}"
+  investor_chart_4: "{sales.chart_grey}"
+  investor_heat_1: "{neutral.900}"
+  investor_heat_2: "{umber.800}"
+  investor_heat_3: "{umber.700}"
+  investor_heat_4: "{brand.800}"
 
   # v2.0.0 — Refactored from 2-agent lock collaboration.
   # See Parspec_Brand_Evolution/Reviews/Lock_Final_Synthesis.md for decision log.
@@ -976,3 +1003,50 @@ sales_register:
     serif_exhibit_surface: "not in current sales register (0/290 slides)"
     universal_brackets: "not in current sales register (0/290 slides)"
     interpretation: "Zero universal bracket usage; selective bracket examples remain valid. Existing paper/serif tokens are preserved for other registers."
+
+# Proposed finance register, scoped to HouseDeck(profile="investor") only.
+# Pending ratification. Does not relax CTA-only/global red policy for other profiles.
+investor_register:
+  status: proposed
+  roles_scope: "investor_* only"
+  geometry:
+    canvas_width_px: 1280
+    canvas_height_px: 720
+    px_per_in: 128
+    inset_px: 56
+    width_px: 1168
+    content_top_px: 184
+    content_bottom_px: 648
+    footer_y_px: 688
+    footer_logo_width_px: 96
+    gutter_px: 24
+  type:
+    eyebrow: {family: "{tokens.typography.family}", size_px: 18, weight: 700, line_height: 1.2}
+    title: {family: "{tokens.typography.family}", size_px: 42, weight: 700, line_height: 1.15}
+    cover: {family: "{tokens.typography.family}", size_px: 72, weight: 700, line_height: 1.05}
+    investor_cover: {family: "{tokens.typography.family}", size_px: 112, weight: 700, line_height: 1.05}
+    hero: {family: "{tokens.typography.family}", size_px: 104, weight: 700, line_height: 1.0}
+    stat: {family: "{tokens.typography.family}", size_px: 52, weight: 700, line_height: 1.0}
+    kpi: {family: "{tokens.typography.family}", size_px: 40, weight: 700, line_height: 1.0}
+    body: {family: "{tokens.typography.family}", size_px: 18, weight: 400, line_height: 1.35}
+    subtitle: {family: "{tokens.typography.family}", size_px: 20, weight: 400, line_height: 1.35}
+    label: {family: "{tokens.typography.family}", size_px: 14, weight: 700, line_height: 1.2}
+    table: {family: "{tokens.typography.family}", size_px: 18, weight: 400, line_height: 1.25}
+    appendix: {family: "{tokens.typography.family}", size_px: 13, weight: 400, line_height: 1.25}
+    footer: {family: "{tokens.typography.family}", size_px: 11, weight: 400, line_height: 1.2}
+  financial_digit_metrics:
+    # Measured from the locally installed Montserrat TTF hmtx tables.
+    # Native per-digit DrawingML spacing gives a common advance without
+    # changing typeface, flattening text or requiring an external font variant.
+    units_per_em: 1000
+    regular: [662, 361, 568, 564, 661, 566, 609, 589, 638, 609]
+    bold: [679, 392, 590, 592, 689, 595, 637, 620, 660, 637]
+  rules:
+    actual_values: white
+    actual_columns: solid-accent
+    forecast_columns: forecast-fill-with-accent-outline
+    no_main_slide_footnotes: true
+    horizontal_gridlines_max: 1
+    main_min_px: 14
+    dense_appendix_min_px: 13
+    negative_format: parentheses

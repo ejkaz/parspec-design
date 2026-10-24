@@ -177,6 +177,7 @@ class Brand:
     avoid_fonts: list[str] = field(default_factory=list)
     raw: dict = field(default_factory=dict)
     sales: dict = field(default_factory=dict)
+    investor: dict = field(default_factory=dict)
 
     def __getattr__(self, name: str):
         # Accessor for ALIAS_MAP names (BLACK, BRAND_ORANGE, ...)
@@ -231,7 +232,7 @@ def load(path: Path | None = None) -> Brand:
 
     # Sales roles are additive and opt-in: old profiles keep their bindings.
     for role_key, raw_val in raw.get("roles", {}).items():
-        if role_key.startswith("sales_"):
+        if role_key.startswith(("sales_", "investor_")):
             colors[role_key] = _hex_to_rgb(_resolve(raw_val, raw))
 
     def resolve_tree(value):
@@ -263,6 +264,7 @@ def load(path: Path | None = None) -> Brand:
         avoid_fonts=avoid_fonts,
         raw=raw,
         sales=sales,
+        investor=resolve_tree(raw.get("investor_register", {})),
     )
 
 

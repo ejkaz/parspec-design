@@ -62,7 +62,7 @@ def model_contract(base_ref):
     walk(original, current)
     # Meta history can be prepended, but earlier explanation must survive.
     require(original["meta"]["notes"].strip() in current["meta"]["notes"], "existing meta history removed")
-    require(current["meta"]["version"] == "2.3.0", "model version")
+    require(tuple(int(v) for v in current["meta"]["version"].split(".")) >= (2, 3, 0), "model predates the sales register")
     require(current["meta"]["status"] == "proposed", "proposal marked ratified")
     require(current["meta"]["brand_version"] == original["meta"]["brand_version"], "brand version changed")
     require(DEFAULT_PROFILE == "master", "sales silently became default")

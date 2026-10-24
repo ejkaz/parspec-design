@@ -85,3 +85,44 @@ in current sales register (0/290 slides)**. This is a scope annotation: existing
 paper/serif tokens remain available to their existing registers, and selective
 brackets remain valid for S05/S13. It is not a claim that the reference set had
 zero selective bracket slides.
+
+## Investor & board register
+
+Select `HouseDeck(profile="investor")` explicitly. This proposed register is
+pending ratification and leaves `master` as the default. It uses the dark
+investor ground, Montserrat typography and scoped `investor_*` roles from
+`design-model.yaml`. It does not amend global orange, markup-red or exhibit
+rules. See [investor archetypes](investor-archetypes.md) for all sixteen board and
+fourteen investor compositions.
+
+These rules apply to this register in place of the sales-specific figure,
+source-marker and hero-color rules above:
+
+| Rule | Investor / board application |
+|---|---|
+| Actual figures | White, including actual KPI values, chart value labels, runway and weighted pipeline totals. Orange may identify forecast, plan, a highlight, the Parspec marker or a recommended column. |
+| Chart encodings | Actual columns have solid orange geometry; forecast columns use the forecast-fill role plus orange outline. Their actual value labels stay white. Waterfall increases are teal, decreases muted red and totals orange. No engineering-red chart series. |
+| Native evidence | Use `Charts(deck)` builders for native column, stacked column/bar, line, combo, XY scatter and doughnut charts. Waterfalls are stacked columns with an invisible base. Use native tables for finance and heatmaps. No chart screenshots or pasted SVG charts. |
+| Status | Pair every variance amount with a directional triangle and word. The signed amount stays neutral; color may tint only the triangle and word. Negative financial amounts use parentheses. |
+| Gridlines | At most one horizontal gridline per chart. Axes, units, category labels and direct value labels remain readable. Chart titles belong in the slide header. |
+| Actual / forecast | Use explicit status chips or table header bands, the specified fill/outline distinction and a legend where applicable. Annual columns combining periods say Actual + forecast. |
+| Board View | Present the board's plan before the actual and any sourced Management View reconciliation. Missing reconciliation data stays absent; never add a plug. |
+| Header reflow | Keep the selected title scale. A two-line title moves the content band down with its plain-English sub-text; do not shrink type or overlap the table. |
+| Type floor | Main text, chart ticks and data labels at least 14px. Only BD-12 and IN-09 tables may use 13px. Footer copyright may use 11px. All sizes map at 128 px/in on the 10 × 5.625 inch canvas. |
+| Tables | Declare units once, right-align numeric columns, use tabular numerals and parentheses negatives. Outline a selected row or column with inner padding. Keep actual figures white even in a highlighted column. |
+| Units | US$M to one decimal for main finance values; percentages and percentage-point changes labeled separately. Split cash amounts from runway months. Appendix can retain additional precision where it answers a question. |
+| Fiscal periods | Use Q3 FY26 or an equivalent full fiscal label. A month includes its calendar year and fiscal quarter, for example Feb 2027 (Q1 FY27). The fiscal year starts February and is named for its opening year. |
+| Sources | No footnotes, superscripts, sample-size notation or methodology prose on main slides. Put source descriptions, definitions, rounding policy and limitations on BD-12 / IN-12 and retain detailed provenance in notes. |
+| Forecast claims | Describe plans as plans. Do not extrapolate cash-out dates, financing dates, cohort observations or break-even definitions beyond the supplied data. |
+| Headcount | Exactly one hiring plan; grey-outline plan geometry and muted-red leavers. Keep function detail consistent with the walk. |
+| Decision copy | Repeat approval sentences verbatim between agenda and decision pages, with explicit owner and timing. Reserve the umber ask band for the authorization or recommendation. |
+| Valuation | Default label is Valuation / ARR (pre-money). Calculate proposed value, peer statistics and deltas from source operands; never subtract a rounded median. Define the basis on IN-12. |
+| Heatmaps | One sequential hue family; unavailable observations are blank. Do not equate cohort expansion relative to Year 1 with trailing-period company NDR. |
+| Footer | Actual wordmark left, centered 11px copyright/confidentiality line, page number right. Every investor slide carries the copyright line. Keep all content clear of the footer zone. |
+| Local artifacts | Galleries use only fictional fixture data. Company templates, decks, renders, confidential corpus content and real company values never enter the public repository. |
+
+The board library uses a compact grid and finance tables; the investor library
+uses wider spacing and larger hero metrics. Both retain one idea per page, no
+more than two content blocks where practical, one divider design per deck and
+editable evidence throughout. Register acceptance, rendering fidelity and
+financial-source acceptance remain separate checks.

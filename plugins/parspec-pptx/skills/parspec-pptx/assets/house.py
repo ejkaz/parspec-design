@@ -7,6 +7,7 @@ into company decks with zero drift. 10 x 5.625 in canvas — the Google Slides
 default, so files round-trip through Slides cleanly.
 
 Profiles
+    investor  proposed board/investor register with editable native charts.
     sales     proposed sales register: black, bold mixed-case titles, top-rule
               cards, native editable chart/process/table motifs. Opt-in only.
     master    the Sept-2026 company master deck ("Parspec Overview"):
@@ -74,6 +75,16 @@ class Profile:
 
 
 PROFILES = {
+    "investor": Profile(
+        name="investor",
+        template=TEMPLATE_DIR / "parspec_sales_template.pptx",
+        env="PARSPEC_PPTX_INVESTOR_TEMPLATE",
+        layouts={kind: "TITLE_ONLY_1_1" for kind in ("cover", "divider", "content", "plain", "blank")},
+        master_anchor="CUSTOM_6_2",
+        title_size=load_brand().investor["type"]["title"]["size_px"] * 72 / 128,
+        title_bold=True, title_caps=False,
+        notes={"status": "proposed", "default": False},
+    ),
     "sales": Profile(
         name="sales",
         template=TEMPLATE_DIR / "parspec_sales_template.pptx",
@@ -207,6 +218,22 @@ class HouseDeck:
                 raise ValueError(f"no master in template has {sorted(self.p.required)}")
             strip_to_template(self.prs, keep_master=idx)
         self.x0, self.xw, self.top, self.bottom = self.p.x0, self.p.xw, self.p.top, self.p.bottom
+        if profile == "investor":
+            # Reuse only the original wordmark; investor chrome is explicit on
+            # each slide so cover/footer behavior is testable and editable.
+            prepare_sales_template(self.prs, self.brand)
+            for item in list(self.master.shapes):
+                if item.shape_type != 13:
+                    self.master.shapes._spTree.remove(item._element)
+            # Hide the inherited picture while retaining it for logo().
+            for picture in self.master.shapes:
+                picture.left = Inches(20)
+            self.master.background.fill.fore_color.rgb = self.brand.role("investor_ground")
+            from .investor import Investor
+            from .charts import Charts
+            self.investor = Investor(self)
+            self.charts = Charts(self)
+            self.top, self.bottom = 184 / 128, 648 / 128
         if profile == "sales":
             prepare_sales_template(self.prs, self.brand)
             g = self.brand.sales["geometry"]
@@ -233,8 +260,13 @@ class HouseDeck:
         lay = self.layout(kind)
         s = self.prs.slides.add_slide(lay)
         for ph in list(s.placeholders):
-            if self.p.name == "sales" or ph.placeholder_format.idx not in keep:
+            if self.p.name in ("sales", "investor") or ph.placeholder_format.idx not in keep:
                 ph._element.getparent().remove(ph._element)
+        if self.p.name == "investor":
+            s.background.fill.solid()
+            s.background.fill.fore_color.rgb = self.brand.role("investor_ground")
+            self.investor.footer(s, len(self.prs.slides))
+            return s
         if self.p.name == "sales":
             s.background.fill.solid()
             s.background.fill.fore_color.rgb = self.brand.role("sales_ground_master")
@@ -288,12 +320,17 @@ class HouseDeck:
 
     # ── chrome ───────────────────────────────────────────────────────
     def eyebrow(self, s, label: str):
+        if self.p.name == "investor":
+            return self.investor.text(s, 56, 40, 1168, 24, label.upper(), kind="eyebrow", color="accent")
         if self.p.name == "sales":
             return self.motif.text(s, 56, 40, 1168, 24, label.upper(), style="eyebrow", color="orange")
         sh.label(s, self.x0, 0.26, 4.0, label, self.pal)
 
     def title(self, s, text: str, accent: str | None = None, *, top=None):
         """Title placeholder; `accent` is an optional trailing phrase in brand orange."""
+        if self.p.name == "investor":
+            return self.investor.text(s, 56, 70 if top is None else top*128, 1168, 104,
+                                      text + (" " + accent if accent else ""), kind="title")
         if self.p.name == "sales":
             return self.motif.text(s, 56, 70 if top is None else top * 128, 1168, 104,
                                    text + (" " + accent if accent else ""), style="title")
@@ -309,6 +346,8 @@ class HouseDeck:
         tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = Inches(0.1)
 
     def subtitle(self, s, text: str, y=None):
+        if self.p.name == "investor":
+            return self.investor.text(s, 56, 128 if y is None else y*128, 1168, 40, text, kind="subtitle", color="muted")
         if self.p.name == "sales":
             return self.motif.text(s, 56, 128 if y is None else y * 128, 1168, 40,
                                    text, style="subtitle", color="ink_muted")
@@ -324,6 +363,10 @@ class HouseDeck:
         caps eyebrow + 24pt bold mixed-case title on the plain cover layout, as in
         its 'Parspec at a Glance' slides and CEO outline decks built from them.
         """
+        if self.p.name == "investor":
+            s = self.slide("content", keep=())
+            self.investor.header(s, eyebrow or "", title, subtitle or "")
+            return s
         if self.p.name == "sales":
             s = self.slide("content", keep=())
             self.motif.header(s, eyebrow or "", title, subtitle or "")
@@ -350,6 +393,19 @@ class HouseDeck:
     def cover(self, title_lines, subtitle: str = "", byline="", *, date="",
               byline_label="Presented by", eyebrow: str | None = None, customer=""):
         """byline / date: str or runs (use self.placeholder('[Date]') for unknowns)."""
+        if self.p.name == "investor":
+            s = self.slide("cover", keep=())
+            self.logo(s, x=56/128, y=48/128, w=176/128)
+            if customer:
+                self.investor.text(s, 274, 50, 850, 32, customer, bold=True)
+            lines = title_lines.split("\n") if isinstance(title_lines, str) else list(title_lines)
+            self.investor.text(s, 56, 238, 1168, 176, "\n".join(lines), kind="cover")
+            self.investor.rule(s, 56, 432, 192, color="accent", h=3)
+            if subtitle:
+                self.investor.text(s, 56, 466, 1168, 68, subtitle, kind="subtitle", color="accent")
+            if date or byline:
+                self.investor.text(s, 56, 552, 1168, 54, " · ".join(v for v in (date, byline) if v), color="muted")
+            return s
         if self.p.name == "sales":
             s = self.slide("cover", keep=())
             self.motif.cover_lockup(s, customer, title_lines, subtitle=subtitle, date=date, byline=byline)
@@ -409,6 +465,14 @@ class HouseDeck:
         townhall: logo, arcs, big heading, optional numbered strip.
         """
         pal = self.pal
+        if self.p.name == "investor":
+            s = self.slide("divider", keep=())
+            self.logo(s, x=56/128, y=48/128, w=176/128)
+            self.investor.text(s, 56, 278, 1168, 30, kicker or "", kind="eyebrow", color="accent")
+            self.investor.text(s, 56, 326, 1168, 100, heading, kind="cover")
+            self.investor.rule(s, 56, 446, 192, color="accent", h=3)
+            self.investor.text(s, 56, 488, 1168, 70, " · ".join(v for v in (tagline, minutes) if v), kind="subtitle", color="muted")
+            return s
         if self.p.name == "sales":
             s = self.slide("divider", keep=())
             if glow is None:

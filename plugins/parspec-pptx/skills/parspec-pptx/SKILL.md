@@ -1,7 +1,7 @@
 ---
 name: parspec-pptx
-description: "Generate Parspec-branded editable .pptx decks via python-pptx, reading the design-model.yaml SSoT. Two registers: (1) house — builds on a company deck used as a template (logo, footer, page numbers, layout backgrounds; 10in canvas). Profiles: sales (opt-in proposed, pending ratification), master (default; the Sept-2026 master deck — black + warm glow, ALL-CAPS titles with an orange phrase, numbered cards, panel rows, problem→solution rows, umber funnels, CAD brackets) and townhall (Q2-26 town hall — left-bar cards, KPI tiles, chevrons, section strips). (2) brand_artifacts — 13.333in canvas, drawn chrome, L1–L12 for standalone board memos. Headless LibreOffice render + PNG verify loop (PowerPoint optional). Use when the deliverable must open or be edited in PowerPoint, Keynote or Google Slides — all-hands / town hall sections, CEO and fundraising updates, sales decks, board decks. Triggers: 'parspec pptx', 'parspec powerpoint', 'board deck for parspec', 'town hall slides', 'all-hands deck', 'use our new deck format', '/parspec-pptx', 'editable pptx with parspec brand'."
-version: 0.4.0
+description: "Generate Parspec-branded editable .pptx decks via python-pptx, reading the design-model.yaml SSoT. Two registers: (1) house — builds on a company deck used as a template (logo, footer, page numbers, layout backgrounds; 10in canvas). Profiles: investor (opt-in proposed, native charts and finance tables), sales (opt-in proposed, pending ratification), master (default; the Sept-2026 master deck — black + warm glow, ALL-CAPS titles with an orange phrase, numbered cards, panel rows, problem→solution rows, umber funnels, CAD brackets) and townhall (Q2-26 town hall — left-bar cards, KPI tiles, chevrons, section strips). (2) brand_artifacts — 13.333in canvas, drawn chrome, L1–L12 for standalone board memos. Headless LibreOffice render + PNG verify loop (PowerPoint optional). Use when the deliverable must open or be edited in PowerPoint, Keynote or Google Slides — all-hands / town hall sections, CEO and fundraising updates, sales decks, board decks. Triggers: 'parspec pptx', 'parspec powerpoint', 'board deck for parspec', 'town hall slides', 'all-hands deck', 'use our new deck format', '/parspec-pptx', 'editable pptx with parspec brand'."
+version: 0.5.0
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion]
 ---
 
@@ -23,6 +23,7 @@ Brand contract: reads `../parspec-design/skills/parspec-design/design-model.yaml
 | Profile | Source deck | Look | Default |
 |---|---|---|---|
 | **master** | Sept-2026 company master deck ("Parspec Overview") | Pure black with a warm glow, ALL-CAPS 25 pt light titles with a trailing orange phrase, no eyebrow; numbered cards with orange top bars, translucent panel rows, problem → solution rows, umber layer fills, CAD corner brackets | **yes** — the current company format |
+| **investor** | Local sales master wordmark | **Proposed, opt-in**: dark ground, finance tables, native editable charts, neutral actual values | no — pending ratification |
 | **sales** | Current local sales master template | **Proposed, opt-in**: pure black; untracked bold orange eyebrow; 42px mixed-case bold title; square top-rule cards, selective brackets, native donut/process/table motifs | no — pending ratification; `master` remains default |
 | **townhall** | Q2-26 town hall | #0F0F0F, bold mixed-case titles with an eyebrow, left-accent-bar cards, KPI tiles, chevrons, numbered section strips | legacy; use when adding to a town hall built on that master |
 
@@ -57,6 +58,42 @@ Paper-warm panels, serif exhibit surfaces and universal brackets are **not in
 current sales register (0/290 slides)**; existing tokens remain for their own
 registers. Selective S05/S13 brackets remain valid. See archetypes for exact
 14px content floors, source notes, highlights and the three-device chrome budget.
+
+### Proposed investor and board profile (v0.5.0)
+
+Use `HouseDeck(profile="investor")` explicitly. `master` remains the default.
+Read `references/investor-archetypes.md` and the Investor & board register in
+`references/motifs.md`. Its geometry, typography and scoped `investor_*` roles
+come from design-model 2.4.0, pending ratification. The proposed finance palette
+is not a global change to the locked sales or engineering invariants.
+
+`deck.investor` provides reflowing headers, neutral actual-value tiles, footer,
+cover and callout. `deck.charts` provides eight native PowerPoint chart builders
+and two native table builders. Each chart has editable embedded workbook data.
+All coordinates use the 1280 by 720 source canvas at 128 pixels per inch.
+Actual columns are solid accent; forecasts have a dark fill and accent outline.
+Actual text stays white. Increases are teal and decreases muted finance red.
+
+```bash
+python3 scripts/investor_gallery.py --data /local/fictional/sample_data.json \
+  --render --evidence /local/out/port --picks-root /local/render
+python3 scripts/investor_smoke.py --data /local/fictional/sample_data.json
+```
+
+The gallery requires the explicitly fictional v3 fixture and builds local
+`parspec_board_gallery.pptx` (16 slides) and `parspec_investor_gallery.pptx`
+(14 slides) under `~/Documents/Claude/Templates`. It reuses the local sales
+master's original wordmark and applies the investor ground through role tokens.
+Override the master with `$PARSPEC_PPTX_INVESTOR_TEMPLATE`. No fixture, proprietary
+template, deck, reference corpus or render belongs in the public repository.
+Use `SOFFICE_PROFILE=file:///tmp/sol_lo_profile` for isolated LibreOffice rendering.
+
+Display numbers are Decimal half-up from stored two-decimal quarters. Annual
+margins divide summed gross profit by summed revenue; ending ARR is an exit
+value. Peer deltas use the unrounded median. Valuation / ARR uses pre-money
+equity value throughout. Runway and retention are fixture assertions, not
+independently verified model outputs. Sources and definitions stay in BD-12 /
+IN-12. Main text is at least 14px; BD-12 and IN-09 permit 13px; copyright is 11px.
 
 ### House templates (company-internal — never commit them)
 
