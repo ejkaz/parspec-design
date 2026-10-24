@@ -16,7 +16,7 @@ from decimal import Decimal, ROUND_HALF_UP
 import math
 
 from pptx.chart.data import CategoryChartData, XyChartData
-from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION, XL_LEGEND_POSITION, XL_MARKER_STYLE, XL_TICK_MARK
+from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION, XL_LEGEND_POSITION, XL_MARKER_STYLE, XL_TICK_MARK, XL_TICK_LABEL_POSITION
 from pptx.enum.dml import MSO_LINE_DASH_STYLE
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
@@ -255,53 +255,139 @@ class Charts:
         return shape
 
     def waterfall(self, slide, labels, values, *, x, y, w, h, total_indices=(0, -1),
-                  font_px=16, maximum=None, number_format="0.0", plan_index=None):
+                  font_px=16, maximum=None, number_format="0.0", plan_index=None,
+                  minimum=0, axis_start_label=None, label_above=False, label_decimals=None):
         """Floating stacked columns: values at total_indices are absolute totals.
 
         Intermediate entries are signed changes. An optional plan_index is an
         absolute total drawn with a neutral outline. Invisible base-series labels
         are explicitly disabled; visible labels show changes, not hidden bases.
+
+        A truncated axis requires a visible ``axis_start_label``. ``label_above``
+        puts real data labels on a native invisible line plot at each bar's upper
+        edge: stacked-column outEnd labels are centered by some Office importers.
+        Negative bridges use a negative base nearest zero and a negative visible
+        span, even when the semantic change is an increase. The label retains the
+        input's signed change, and its point color retains the semantic role.
         """
         n = len(values)
+        if not n or len(labels) != n:
+            raise ValueError("waterfall labels and values must be nonempty and equal length")
+        if minimum > 0 and not axis_start_label:
+            raise ValueError("truncated waterfall axis requires axis_start_label")
         totals = {i % n for i in total_indices}
-        bases, steps, roles = [], [], []
+        bases, steps, roles, anchors, crossed = [], [], [], [], []
         running = 0
         for i, value in enumerate(values):
             if i in totals or i == plan_index:
                 base, height = 0, value
                 running = value
                 role = "muted" if i == plan_index else "accent"
+                top, crossing = max(0, value), 0
             else:
-                base, height = min(running, running + value), abs(value)
-                running += value
+                following = running + value
+                low, top = min(running, following), max(running, following)
+                if low >= 0:
+                    base, height, crossing = low, top - low, 0
+                elif top <= 0:
+                    base, height, crossing = top, low - top, 0
+                else:
+                    # A bar spanning zero needs one positive and one negative
+                    # visible component because native stacks diverge at zero.
+                    base, height, crossing = 0, top, low
+                running = following
                 role = "positive" if value >= 0 else "negative"
             bases.append(base)
             steps.append(height)
             roles.append(role)
+            anchors.append(top)
+            crossed.append(crossing)
         data = CategoryChartData(number_format=number_format)
         data.categories = labels
         data.add_series("Hidden base", bases)
         data.add_series("Movement", steps)
+        has_crossing = any(crossed)
+        if has_crossing:
+            data.add_series("Cross-zero span", crossed)
+        if label_above:
+            data.add_series("Label anchors", anchors)
         shape = self._new(slide, XL_CHART_TYPE.COLUMN_STACKED, data, x, y, w, h,
                           "waterfall", font_px=font_px)
         chart, plot = shape.chart, shape.chart.plots[0]
         plot.gap_width = 75
-        base, movement = chart.series
+        base, movement = chart.series[0], chart.series[1]
+        # OOXML's omitted invertIfNegative flag allows Office importers to use
+        # an alternate (often transparent) negative fill, even when dPt has an
+        # explicit solid fill. Make the intended same-fill behavior explicit at
+        # both series and point level for negative bridges.
+        base.invert_if_negative = False
+        movement.invert_if_negative = False
+        self._paint(movement, "accent")
         base.format.fill.background()
         base.format.line.fill.background()
         base_labels = _el("c:dLbls")
         for option in ("showLegendKey", "showVal", "showCatName", "showSerName", "showPercent", "showBubbleSize"):
             base_labels.append(_el("c:" + option, val=0))
         base._element.insert(list(base._element).index(base._element.find(qn("c:cat"))), base_labels)
+        if has_crossing:
+            cross_series = chart.series[2]
+            cross_series.invert_if_negative = False
+            self._paint(cross_series, "accent")
+            cross_series._element.insert(
+                list(cross_series._element).index(cross_series._element.find(qn("c:cat"))),
+                deepcopy(base_labels))
         self._labels(plot, fmt=number_format, font_px=font_px)
+        if label_above:
+            area = chart._chartSpace.chart.plotArea
+            bar_plot = area.find(qn("c:barChart"))
+            anchor_xml = bar_plot.findall(qn("c:ser"))[-1]
+            bar_plot.remove(anchor_xml)
+            line_plot = _el("c:lineChart")
+            line_plot.append(_el("c:grouping", val="standard"))
+            line_plot.append(anchor_xml)
+            for axis in bar_plot.findall(qn("c:axId")):
+                line_plot.append(deepcopy(axis))
+            area.insert(area.index(bar_plot) + 1, line_plot)
+            anchor_series = chart.series[-1]
+            anchor_series.format.line.fill.background()
+            anchor_series.marker.style = XL_MARKER_STYLE.NONE
+            self._labels(chart.plots[-1], fmt=number_format, font_px=font_px,
+                         position=XL_LABEL_POSITION.ABOVE)
+            hidden = _el("c:dLbls")
+            for option in ("showLegendKey", "showVal", "showCatName", "showSerName", "showPercent", "showBubbleSize"):
+                hidden.append(_el("c:" + option, val=0))
+            movement._element.insert(list(movement._element).index(movement._element.find(qn("c:cat"))), hidden)
+        decimals = label_decimals if label_decimals is not None else (0 if number_format == "0" else 1)
         for i, (value, role) in enumerate(zip(values, roles)):
-            point = movement.points[i]
-            point.format.fill.solid()
-            point.format.fill.fore_color.rgb = self.color("ground" if i == plan_index else role)
-            point.format.line.color.rgb = self.color(role)
-            point.format.line.width = self.pt(1.5)
-            self._custom_label(movement, i, financial(value, 0 if number_format == "0" else 1), font_px=font_px)
-        self._axes(chart, font_px=font_px, minimum=0, maximum=maximum, number_format=number_format)
+            for visible_series in [movement] + ([chart.series[2]] if has_crossing else []):
+                point = visible_series.points[i]
+                point.format.fill.solid()
+                point.format.fill.fore_color.rgb = self.color("ground" if i == plan_index else role)
+                point.format.line.color.rgb = self.color(role)
+                point.format.line.width = self.pt(1.5)
+                # Point._element is the parent c:ser in python-pptx, not c:dPt.
+                # The negative-fill override must be on the actual point node:
+                # LibreOffice otherwise inverts each explicitly colored negative
+                # point to its transparent alternate fill, hiding every bar.
+                point_xml = visible_series._element.get_or_add_dPt_for_point(i)
+                invert = point_xml.find(qn("c:invertIfNegative"))
+                if invert is None:
+                    invert = _el("c:invertIfNegative", val=0)
+                    point_xml.insert(1, invert)
+                else:
+                    invert.set("val", "0")
+            label = financial(value, decimals)
+            if value > 0 and i not in totals and i != plan_index:
+                label = "+" + label
+            self._custom_label(anchor_series if label_above else movement, i, label,
+                               font_px=font_px, position="t" if label_above else "outEnd")
+        self._axes(chart, font_px=font_px, minimum=minimum, maximum=maximum, number_format=number_format)
+        if max(anchors) <= 0:
+            chart.category_axis.tick_label_position = XL_TICK_LABEL_POSITION.LOW
+        if axis_start_label:
+            notice = self.text(slide, x + 90, y + 4, min(w - 100, 480), 26,
+                               axis_start_label, font_px=max(14, font_px), color="muted")
+            notice.name = "waterfall:axis-start-label"
         return shape
 
     def line_trend(self, slide, categories, series, *, x, y, w, h, font_px=16,

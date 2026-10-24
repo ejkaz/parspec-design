@@ -80,9 +80,9 @@ python3 scripts/investor_gallery.py --data /local/fictional/sample_data.json \
 python3 scripts/investor_smoke.py --data /local/fictional/sample_data.json
 ```
 
-The gallery requires the explicitly fictional v3 fixture and builds local
-`parspec_board_gallery.pptx` (16 slides) and `parspec_investor_gallery.pptx`
-(14 slides) under `~/Documents/Claude/Templates`. It reuses the local sales
+The gallery requires the explicitly fictional v4 fixture and builds local
+`parspec_board_gallery.pptx` (17 slides) and `parspec_investor_gallery.pptx`
+(19 slides) under `~/Documents/Claude/Templates`. It reuses the local sales
 master's original wordmark and applies the investor ground through role tokens.
 Override the master with `$PARSPEC_PPTX_INVESTOR_TEMPLATE`. No fixture, proprietary
 template, deck, reference corpus or render belongs in the public repository.

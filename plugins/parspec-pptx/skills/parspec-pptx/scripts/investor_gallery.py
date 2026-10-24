@@ -1,6 +1,6 @@
 """Build local, fictional board and investor galleries from an explicit fixture.
 
-No company figures or template assets are packaged. --data must be the v3
+No company figures or template assets are packaged. --data must be the v4
 sample_data.json supplied with the local design brief. Never use a live model.
 """
 from __future__ import annotations
@@ -18,9 +18,15 @@ SKILL = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL))
 from assets.house import HouseDeck, TEMPLATE_DIR
 from assets import shapes as sh
-from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.oxml.xmlchemy import OxmlElement
+from pptx.oxml.ns import qn
+from pptx.util import Inches, Pt
 
 D = Decimal
+BOARD_IDS = ['BD01','BD01a']+[f'BD{i:02}' for i in range(2,17)]
+INVESTOR_IDS = [f'IN{i:02}' for i in range(1,20)]
 PICKS = [('BD01','bb'),('BD01a','ba'),('BD02','ba'),('BD03','ba'),
          ('BD04','bb'),('BD05','ba'),('BD06','ba'),('BD07','bb'),
          ('BD08','bb'),('BD09','ba'),('BD10','bb'),('BD11','ba'),
@@ -92,7 +98,7 @@ class Gallery:
 
     def slide(self,sid,eyebrow='',title='',subtitle=''):
         s=self.deck.slide('plain',keep=()); self.ids.append(sid)
-        self.deck.notes(s, f'Illustrative sample data (template fixture v3).\n'
+        self.deck.notes(s, f'Illustrative sample data (template fixture v4).\n'
                         f'Parspec, Inc. standalone.\nSlide: {sid}\nFixture SHA-256: {self.sha}')
         y=self.i.header(s,eyebrow,title,subtitle) if title else 184
         return s,y
@@ -100,6 +106,114 @@ class Gallery:
     def table(self,s,headers,rows,*,x=56,y=220,w=1168,h=350,**kw):
         kw.setdefault('total_rows',[j for j,row in enumerate(rows) if row[0] in ('Total','EBITDA','Gross profit')])
         return self.ch.fin_table(s,headers,rows,x=x,y=y,w=w,h=h,**kw)
+
+    def cell_lines(self,cell,lines,*,padding=18,left=None,fill='card'):
+        """Native editable paragraphs in an unthemed table cell."""
+        cell.fill.solid();cell.fill.fore_color.rgb=self.i.color(fill)
+        cell.margin_left=Inches((padding if left is None else left)/128)
+        cell.margin_right=Inches(padding/128)
+        cell.margin_top=cell.margin_bottom=Inches(padding/128)
+        cell.vertical_anchor=MSO_ANCHOR.TOP
+        props=cell._tc.get_or_add_tcPr()
+        for side in ('lnL','lnR','lnT','lnB'):
+            edge=OxmlElement('a:'+side);edge.set('w','6350')
+            solid=OxmlElement('a:solidFill');clr=OxmlElement('a:srgbClr');clr.set('val',str(self.i.color('line')))
+            solid.append(clr);edge.append(solid);props.append(edge)
+        cell.text=''
+        for j,(text,size,color,bold) in enumerate(lines):
+            para=cell.text_frame.paragraphs[0] if j==0 else cell.text_frame.add_paragraph()
+            para.space_before=Pt(0);para.space_after=self.ch.pt(8 if j==0 else 12 if j<len(lines)-1 else 0)
+            para.line_spacing=self.ch.pt(size*1.15);para.alignment=PP_ALIGN.LEFT
+            run=para.add_run();run.text=str(text);run.font.name=self.deck.brand.font
+            run.font.size=self.ch.pt(size);run.font.bold=bold;run.font.color.rgb=self.i.color(color)
+
+    @staticmethod
+    def plot_layout(chart,x,y,w,h):
+        area=chart._chartSpace.chart.plotArea
+        layout=area.find(qn('c:layout'))
+        if layout is None:
+            layout=OxmlElement('c:layout');area.insert(0,layout)
+        for child in list(layout):layout.remove(child)
+        manual=OxmlElement('c:manualLayout')
+        for name,val in [('layoutTarget','inner'),('xMode','edge'),('yMode','edge'),('wMode','factor'),('hMode','factor'),('x',x),('y',y),('w',w),('h',h)]:
+            elem=OxmlElement('c:'+name);elem.set('val',str(val));manual.append(elem)
+        layout.append(manual)
+
+    def customer_outcomes(self):
+        d=self.d
+        s,y=self.slide('IN15','Customer outcomes','Customers Quote Faster and Win More',
+                       'Illustrative customer outcomes with fiscal periods and attribution placeholders.')
+        rows=[[o['customer']+'\n'+o['segment'],o['metric']+'\n'+o['before']+' → '+o['after'],o['period'],o['status'],o['attribution']] for o in d['customer_outcomes']]
+        native=self.table(s,['Customer','Outcome before → after','Period','Status','Attribution'],rows,y=222,h=390,
+                          widths=[.25,.27,.19,.10,.19],font_px=18,numeric_cols=[])
+        native.name='native:customer_outcomes'
+        # A single rule separates each evidence row. No copied logos or quotes.
+        for row in list(native.table.rows)[1:]:
+            for cell in row.cells:
+                props=cell._tc.get_or_add_tcPr();edge=OxmlElement('a:lnB');edge.set('w','6350')
+                fill=OxmlElement('a:solidFill');clr=OxmlElement('a:srgbClr');clr.set('val',str(self.i.color('line')))
+                fill.append(clr);edge.append(fill);props.append(edge)
+
+    def customer_value(self):
+        value=self.d['customer_value'];total=sum(b['value_k'] for b in value['benefits'])
+        s,y=self.slide('IN16','Customer value',f'${num(total,0)}K of Annual Value for a 12-Branch Distributor',
+                       value['customer']+'. '+value['horizon']+' scope.')
+        rows=[[b['benefit'],b['mechanism'],num(b['value_k']),b['status']] for b in value['benefits']]
+        rows.append(['Total annual value','',num(total),'Mixed'])
+        native=self.table(s,['Benefit','Mechanism','Annual value · US$K','Status'],rows,y=226,h=330,
+                          widths=[.24,.43,.18,.15],font_px=20,numeric_cols=[2],total_rows=[3])
+        native.name='native:customer_value'
+        for j,benefit in enumerate(value['benefits'],1):
+            cell=native.table.cell(j,3);cell.fill.fore_color.rgb=self.i.color('band' if benefit['status']=='Measured' else 'forecast_fill')
+            for para in cell.text_frame.paragraphs:
+                for run in para.runs:run.font.color.rgb=self.i.color('text' if benefit['status']=='Measured' else 'accent')
+        self.i.text(s,56,584,1168,64,ratio(total/value['parspec_cost_k'])+' the annual subscription',size=44,bold=True)
+        self.i.text(s,56,646,1168,26,'Annual subscription: $'+num(value['parspec_cost_k'])+'K',size=16,color='muted')
+
+    def team(self):
+        s,y=self.slide('IN17','Team','[Leadership team]','Names, credentials and portraits remain template placeholders.')
+        native=s.shapes.add_table(2,3,Inches(56/128),Inches(224/128),Inches(1168/128),Inches(416/128))
+        native.name='native:leadership_grid';native.table.first_row=False;native.table.horz_banding=False
+        cw,ch=1168/3,208
+        for j,person in enumerate(self.d['team']):
+            xx=56+(j%3)*cw;yy=224+(j//3)*ch
+            self.cell_lines(native.table.cell(j//3,j%3),[(person['name'],24,'text',True),
+                            (person['role'],18,'text',False),(person['credential'],14,'muted',False)],padding=22,left=132,fill='ground')
+            circle=sh.shape(s,MSO_SHAPE.OVAL,*[v/128 for v in (xx+24,yy+24,80,80)],fill=self.i.color('band'),line=self.i.color('line'),lw=.56)
+            circle.name=f'portrait-placeholder:{j+1}'
+            self.i.text(s,xx+24,yy+54,80,24,'Portrait',size=14,color='muted',align='c')
+
+    def product_mechanism(self):
+        mechanism=self.d['product_mechanism']
+        s,y=self.slide('IN18','Product mechanism','From Specification to Purchase Order',
+                       'Specifications become quotes, submittals and purchase orders.')
+        for k,group in enumerate(('inputs','engine','outputs')):
+            yy=216+k*154
+            native=s.shapes.add_table(1,5,Inches(56/128),Inches(yy/128),Inches(1168/128),Inches(104/128))
+            native.name='native:mechanism_'+group;native.table.first_row=False;native.table.horz_banding=False
+            native.table.columns[0].width=Inches(140/128)
+            for c in range(1,5):native.table.columns[c].width=Inches((1028/4)/128)
+            self.cell_lines(native.table.cell(0,0),[(group.upper(),18,'accent',True)],padding=18)
+            for j,item in enumerate(mechanism[group],1):
+                status=mechanism['status'].get(item,'Live')
+                self.cell_lines(native.table.cell(0,j),[(item,18,'text',True),(status,14,'accent' if status=='Planned' else 'muted',False)],padding=18,
+                                fill='forecast_fill' if status=='Planned' else 'card')
+            if k<2:
+                connector=s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT,Inches(640/128),Inches((yy+104)/128),Inches(640/128),Inches((yy+154)/128))
+                connector.name=f'mechanism-connector:{group}'
+                connector.line.color.rgb=self.i.color('line');connector.line.width=Pt(1.12)
+                line=connector._element.spPr.get_or_add_ln();arrow=OxmlElement('a:tailEnd');arrow.set('type','triangle');line.append(arrow)
+
+    def cash_bridge(self,sid):
+        bridge=self.d['ebitda_to_cash_q3_fy26']
+        keys=['ebitda','working_capital','deferred_revenue','capex','interest','other','net_burn']
+        labels=['EBITDA','Working capital','Deferred revenue','Software & capex','Interest','Other','Net burn']
+        s,y=self.slide(sid,'EBITDA to cash',f'Q3 FY26 Net Burn {money(-bridge["net_burn"])} vs EBITDA $({num(-bridge["ebitda"],2)})M',
+                       'Operating result to net cash movement. Parspec, Inc. standalone.')
+        self.ch.waterfall(s,labels,[bridge[k] for k in keys],x=56,y=232,w=1168,h=348,
+                          minimum=-3.7,maximum=0,label_above=True,label_decimals=2,number_format='0.00;(0.00);0.00')
+        self.i.text(s,56,194,1168,24,'US$M · Q3 FY26',kind='label',color='muted')
+        self.i.callout(s,'Net burn '+money(-bridge['net_burn'])+' ties to the board plan-versus-actual scorecard.',y=614,h=40)
 
     def strip(self,s,items,*,y=564,x=56,w=1168):
         cw=w/len(items)
@@ -137,18 +251,33 @@ class Gallery:
         vals=[money(b['end']),money(c['net']),percent(d['unit_economics']['ndr']),percent(p['gross_margin'][2]),money(d['plan_vs_actual_q3_fy26'][4]['actual']),money(d['plan_vs_actual_q3_fy26'][5]['actual'])]
         labels=['Ending ARR','Net new ARR','NDR · trailing year','Gross margin','Net burn','Cash']
         contexts=[f'+{money(c["net"])} QoQ',f'{money(c["net"])} vs {money(d["plan_vs_actual_q3_fy26"][0]["plan"]-b["start"])} plan',d['quarter_kpis'][2]['delta'],d['quarter_kpis'][3]['delta'],d['quarter_kpis'][4]['delta'],d['quarter_kpis'][5]['delta']]
-        for j in range(6):self.i.tile(s,56+j*199,y,175,182,labels[j],vals[j],contexts[j],size=38)
-        self.i.text(s,56,394,1168,28,'WHAT CHANGED',kind='eyebrow',color='accent')
-        rows=[['ARR gains',f'New logos {money(b["new"])} plus expansion {money(b["expansion"])}.'],
-              ['ARR losses',f'Contraction {money(-b["contraction"])} and churn {money(-b["churn"])}; net new {money(c["net"])} vs {money(d["plan_vs_actual_q3_fy26"][0]["plan"]-b["start"])} plan.'],
-              ['Cash and spend',f'Cash {money(d["plan_vs_actual_q3_fy26"][5]["actual"])}; OpEx {money(p["opex"][2])} vs {money(d["plan_vs_actual_q3_fy26"][3]["plan"])} plan.']]
-        tbl=self.table(s,['',''],rows,y=434,h=184,widths=[.18,.82],font_px=18,numeric_cols=[])
-        tbl.table._tbl.remove(tbl.table._tbl.tr_lst[0])
-        from pptx.util import Inches
-        for rr in tbl.table.rows:rr.height=Inches(61/128)
+        actuals=d['plan_vs_actual_q3_fy26']
+        contexts=[f'+{money(c["net"])} ▲ QoQ',
+                  f'−{money(actuals[0]["plan"]-b["end"])} ▼ vs plan',
+                  d['quarter_kpis'][2]['delta']+' ▲',
+                  d['quarter_kpis'][3]['delta']+' ▲',
+                  f'−{money(actuals[4]["plan"]-actuals[4]["actual"])} ▲ vs plan',
+                  f'+{money(actuals[5]["actual"]-actuals[5]["plan"])} ▲ vs plan']
+        grid=s.shapes.add_table(2,3,Inches(56/128),Inches(224/128),Inches(752/128),Inches(372/128))
+        grid.name='native:kpi_grid'; grid.table.first_row=False;grid.table.horz_banding=False
+        for j in range(6):
+            cell=grid.table.cell(j//3,j%3)
+            self.cell_lines(cell,[(labels[j].upper(),14,'muted',True),
+                                  (vals[j],42,'text',True),
+                                  (contexts[j],16,'muted',False)],padding=22)
+        self.i.rule(s,56,224,752,color='accent',h=3)
+        self.i.text(s,856,224,368,28,'WHAT CHANGED',kind='eyebrow',color='accent')
+        changes=[('ARR gains',f'New logos {money(b["new"])} plus expansion {money(b["expansion"])}.'),
+                 ('ARR losses',f'Contraction {money(-b["contraction"])} and churn {money(-b["churn"])}. Net new {money(c["net"])} vs {money(actuals[0]["plan"]-b["start"])} plan.'),
+                 ('Cash and spend',f'Cash {money(actuals[5]["actual"])} is {money(actuals[5]["actual"]-actuals[5]["plan"])} ahead. OpEx {money(p["opex"][2])} vs {money(actuals[3]["plan"])} plan.')]
+        for j,(label,body) in enumerate(changes):
+            yy=272+j*118
+            self.i.text(s,856,yy,368,25,label,size=20,bold=True)
+            self.i.text(s,856,yy+34,368,82,body,size=18)
+            if j<2:self.i.rule(s,856,yy+108,368)
 
         s,y=self.slide('BD03','ARR bridge',f'{money(c["net"])} Net New ARR in Q3 FY26','Starting ARR to ending ARR. Parspec, Inc. standalone.')
-        self.ch.waterfall(s,['Start\nQ3 FY26','New logos','Expansion','Contraction','Churn','End\nQ3 FY26'],[b[k] for k in ('start','new','expansion','contraction','churn','end')],x=56,y=y,w=1168,h=358)
+        self.ch.waterfall(s,['Start\nQ3 FY26','New logos','Expansion','Contraction','Churn','End\nQ3 FY26'],[b[k] for k in ('start','new','expansion','contraction','churn','end')],x=56,y=214,w=1168,h=330,minimum=15,maximum=23,axis_start_label='Axis starts at $15M',label_above=True)
         self.strip(s,[('New + expansion',money(c['gains']),''),('Contraction + churn',money(c['losses']),''),('Net new ARR',money(c['net']),''),('GRR · trailing year',percent(d['unit_economics']['grr']),''),('NDR · trailing year',percent(d['unit_economics']['ndr']),'')],y=566)
 
         s,y=self.slide('BD04','Growth',f'Plan Reaches ${num(c["arr"][-1],0)}M Ending ARR in FY27','Quarterly ending ARR. Parspec, Inc. standalone.')
@@ -171,10 +300,19 @@ class Gallery:
         self.i.callout(s,f'Revenue rises {money(p["revenue"][-1]-p["revenue"][0])} across FY26; EBITDA loss narrows from {money(c["ebitda"][0])} to {money(c["ebitda"][-1])}.',y=588)
 
         s,y=self.slide('BD07','Cash',f'{cash["runway_months_without_debt"]} Months of Runway Before the Debt Draw','Month-end cash forecast. Parspec, Inc. standalone.')
-        labels=['Oct 2026\n(Q3 FY26)']+[month_label(m) for m in cash['months']]
+        labels=['Oct']+[m.split()[0] for m in cash['months']]
         values=[d['plan_vs_actual_q3_fy26'][5]['actual']]+cash['cash_end']
         self.ch.act_forecast_chips(s,'ACTUAL · OCT 2026 (Q3 FY26)','FORECAST · FROM NOV 2026 (Q4 FY26)',x=84,y=186,w=720)
-        self.ch.column_actual_forecast(s,labels,values,1,x=56,y=232,w=820,h=310,font_px=14,legend=False)
+        chart=self.ch.column_actual_forecast(s,labels,values,1,x=56,y=280,w=820,h=252,font_px=14,legend=False)
+        self.plot_layout(chart.chart,.075,.06,.90,.80)
+        # Month labels stay single-line; groups identify the fiscal year/quarter.
+        plot_x,plot_w=56+820*.075,820*.90
+        for first,count,fiscal in [(0,1,'Q3 FY26'),(1,3,'Q4 FY26'),(4,3,'Q1 FY27'),(7,3,'Q2 FY27'),(10,3,'Q3 FY27')]:
+            xx=plot_x+plot_w*first/len(labels);ww=plot_w*count/len(labels)
+            self.i.rect(s,xx,250,ww,26,fill='band')
+            band=self.i.text(s,xx-12,252,ww+24,22,fiscal,size=14,color='muted',align='c')
+            band.name=f'fiscal-band:{first}:{count}:{fiscal}'
+        self.i.text(s,56,540,820,22,'Oct 2026 to Oct 2027 · fiscal quarters shown above',size=14,color='muted')
         self.i.text(s,362,218,500,24,f'{money(cash["debt_draw"]["amount"])} debt draw · Feb 2027 (Q1 FY27)',kind='label',color='accent')
         self.table(s,['US$M','Next twelve months','Monthly average'],[['Net burn',num(sum(cash['net_burn'])),num(sum(cash['net_burn'])/len(cash['net_burn']))]],x=56,y=562,w=820,h=66,font_px=16,widths=[.3,.35,.35])
         self.i.tile(s,912,184,312,132,'Cash · Q3 FY26',money(d['plan_vs_actual_q3_fy26'][5]['actual']),size=42)
@@ -189,7 +327,7 @@ class Gallery:
         self.i.callout(s,f'The Bank case holds {money(d["cases"][1]["min_cash"])} at its low point; only the Bear case runs out of cash, in {d["cases"][2]["cash_out"]}.',y=592)
 
         s,y=self.slide('BD09','Headcount',f'Net +{sum(hc["end"])-sum(hc["start"])} Hires to {sum(hc["end"])}; Q4 FY26 Plan Is {sum(hc["plan_q4"])}','One hiring plan. Parspec, Inc. standalone.')
-        self.ch.waterfall(s,['Start\nQ3 FY26','Joiners','Leavers','End\nQ3 FY26','Plan\nQ4 FY26'],[sum(hc['start']),sum(hc['joiners']),-sum(hc['leavers']),sum(hc['end']),sum(hc['plan_q4'])],total_indices=(0,3,4),plan_index=4,number_format='0',x=56,y=220,w=490,h=330)
+        self.ch.waterfall(s,['Start\nQ3 FY26','Joiners','Leavers','End\nQ3 FY26','Plan\nQ4 FY26'],[sum(hc['start']),sum(hc['joiners']),-sum(hc['leavers']),sum(hc['end']),sum(hc['plan_q4'])],total_indices=(0,3,4),plan_index=4,number_format='0',x=56,y=244,w=490,h=306,minimum=90,maximum=112,axis_start_label='Axis starts at 90 heads',label_above=True)
         rows=[[f,str(hc['start'][j]),'+'+str(hc['joiners'][j]),'('+str(hc['leavers'][j])+')' if hc['leavers'][j] else '—',str(hc['end'][j]),str(hc['plan_q4'][j])] for j,f in enumerate(hc['functions'])]
         rows.append(['Total',str(sum(hc['start'])),'+'+str(sum(hc['joiners'])),'('+str(sum(hc['leavers']))+')',str(sum(hc['end'])),str(sum(hc['plan_q4']))])
         self.table(s,['Function','Start','Joiners','Leavers','End','Q4 FY26\nPlan'],rows,x=570,y=220,w=654,h=330,widths=[.36,.12,.13,.13,.12,.14],font_px=16,highlight_col=5)
@@ -216,7 +354,7 @@ class Gallery:
         self.i.text(s,56,568,560,22,'DEFINITIONS AND ROUNDING',kind='label',color='accent')
         self.i.text(s,56,596,560,62,'Store two decimals half-up. Display $M at one decimal half-up. Totals sum stored quarters; margins use totals. Runway and case cash-out are supplied model assertions.',size=13,color='muted')
         self.i.text(s,660,568,564,22,'SOURCES',kind='label',color='accent')
-        self.i.text(s,660,596,564,62,'Illustrative sample data (template fixture v3). Company NDR / GRR are trailing-twelve-month assertions. ARR bridge is quarterly. Minimum-cash horizon is unspecified.',size=13,color='muted')
+        self.i.text(s,660,596,564,62,'Illustrative sample data (template fixture v4). Company NDR / GRR are trailing-twelve-month assertions. ARR bridge is quarterly. Minimum-cash horizon is unspecified.',size=13,color='muted')
 
         s,y=self.slide('BD13','For approval',f'Authorize the ${num(cash["debt_draw"]["amount"],0)}M Debt Draw Window','Draw window: Feb 2027 (Q1 FY27). Parspec, Inc. standalone.')
         self.i.tile(s,56,184,366,136,'Draw amount',money(cash['debt_draw']['amount']),forecast=True,size=42)
@@ -244,6 +382,7 @@ class Gallery:
         self.i.text(s,56,518,850,36,'P&L · Cash & runway · Scenarios · Headcount',size=22,color='muted')
         self.i.text(s,940,480,284,26,'PRESENTED BY',kind='label',color='accent')
         self.i.text(s,940,518,284,36,'CFO · 20 minutes',size=22)
+        self.cash_bridge('BD16')
         return self.deck
 
     def pnl_rows(self,detail=False):
@@ -319,9 +458,18 @@ class Gallery:
         self.i.text(s,640,592,584,46,f'{money(b["end"])} ARR today · {percent(b["end"]/(market["som"]*1000),1)} of five-year SOM',size=20,color='muted')
 
         s,y=self.slide('IN07','Competition','Built for the Whole Quote-to-Order Workflow','Qualitative positioning. Workflow depth and fit for electrical distribution.')
-        self.ch.scatter_labeled(s,d['competitive_2x2']['players'],x=104,y=232,w=1070,h=360,highlight='Parspec',qualitative=True)
-        self.i.text(s,56,184,1168,28,'BUILT FOR ELECTRICAL DISTRIBUTION · LOW TO HIGH (QUALITATIVE)',kind='label',color='muted')
-        self.i.text(s,56,620,1168,30,'LOW                                      WORKFLOW DEPTH (QUALITATIVE)                                      HIGH',size=14,color='muted',align='c')
+        frame=(144,250,1016,346)
+        native=self.ch.scatter_labeled(s,d['competitive_2x2']['players'],x=frame[0],y=frame[1],w=frame[2],h=frame[3],highlight='Parspec',qualitative=True)
+        self.plot_layout(native.chart,0,0,1,1)
+        self.i.rect(s,*frame,fill=None,line='line')
+        self.i.rect(s,frame[0]+frame[2]/2,frame[1],1,frame[3],fill='line')
+        self.i.rule(s,frame[0],frame[1]+frame[3]/2,frame[2],color='line')
+        self.i.text(s,56,202,1168,25,'BUILT FOR ELECTRICAL DISTRIBUTION (QUALITATIVE)',kind='label',color='muted')
+        self.i.text(s,56,250,78,24,'HIGH',kind='label',color='muted',align='r')
+        self.i.text(s,56,574,78,24,'LOW',kind='label',color='muted',align='r')
+        self.i.text(s,144,620,86,24,'LOW',kind='label',color='muted')
+        self.i.text(s,1074,620,86,24,'HIGH',kind='label',color='muted',align='r')
+        self.i.text(s,252,620,800,28,'WORKFLOW DEPTH (QUALITATIVE)',kind='label',color='muted',align='c')
 
         s,y=self.slide('IN08','Valuation','Proposed Valuation / ARR Is Below Peer Median','Valuation / ARR (pre-money). Parspec, Inc. standalone.')
         self.i.text(s,56,240,360,120,ratio(c['multiple']),kind='hero',color='accent')
@@ -368,9 +516,9 @@ class Gallery:
             self.i.text(s,xx-76,420,330,104,m['what'].replace(' ending ARR','\nEnding ARR').replace(' run rate','\nRun rate'),size=40,bold=True,align='c',color='accent' if j==2 else 'text')
             self.i.text(s,xx-76,550,330,32,m['by'],size=20,color='muted',align='c')
 
-        s,y=self.slide('IN12','Appendix','Sources and Definitions','Illustrative sample data (template fixture v3). Parspec, Inc. standalone.')
-        rows=[['ARR','Ending recurring revenue. Actual through Q3 FY26; forecast from Q4 FY26.','arr_history; arr_bridge_q3_fy26'],['Company NDR / GRR','Trailing-twelve-month fixture assertions, separate from the cohort table.','unit_economics; kpi_note'],['Cohort expansion','Cumulative ARR relative to Year 1. Blank cells are unavailable.','cohort_ndr'],['Valuation / ARR (pre-money)','Pre-money equity value / ending ARR for company and peers. This is not EV.','valuation_basis; comps; round'],['Peer statistics','Unrounded median and inclusive interpolated quartiles; deltas precede display rounding.','comps'],['Cash / runway / cases','Twelve months of cash; runway and later cash-out are supplied assertions. Minimum-cash horizon unspecified.','cash_runway; cases; runway_note'],['Market / unit economics','Illustrative assumptions. SOM is a five-year opportunity. CAC / LTV are assertions.','market; unit_economics'],['Rounding / fiscal basis','Store two decimals half-up; sum stored quarters. Fiscal year opens in February. FY26 ends January 2027.','rounding_rule; fiscal_year']]
-        self.table(s,['Metric','Definition / limitation','Fixture fields'],rows,y=202,h=438,widths=[.2,.55,.25],font_px=16,numeric_cols=[])
+        s,y=self.slide('IN12','Appendix','Sources and Definitions','Illustrative sample data (template fixture v4). Parspec, Inc. standalone.')
+        rows=[['ARR','Ending recurring revenue. Actual through Q3 FY26; forecast from Q4 FY26.','arr_history; arr_bridge_q3_fy26'],['Company NDR / GRR','Trailing-twelve-month fixture assertions, separate from the cohort table.','unit_economics; kpi_note'],['Cohort expansion','Cumulative ARR relative to Year 1. Blank cells are unavailable.','cohort_ndr'],['Valuation / ARR (pre-money)','Pre-money equity value / ending ARR for company and peers. This is not EV.','valuation_basis; comps; round'],['Peer statistics','Unrounded median and inclusive interpolated quartiles; deltas precede display rounding.','comps'],['Cash / runway / cases','Twelve months of cash; runway and later cash-out are supplied assertions. Minimum-cash horizon unspecified.','cash_runway; cases; runway_note'],['Market / unit economics','Illustrative assumptions. SOM is a five-year opportunity. CAC / LTV are assertions.','market; unit_economics'],['Rounding / fiscal basis','Store two decimals half-up; sum stored quarters. Fiscal year opens in February. FY26 ends January 2027.','rounding_rule; fiscal_year'],['Customer / team / product','Fictional asserted outcomes and annual benefits; credentials and attribution remain placeholders. Track orders is planned; other listed steps live.','customer_outcomes; customer_value; team; product_mechanism'],['EBITDA to cash','Same-quarter supplied adjustments sum to negative net burn; this is an illustrative reconciliation.','ebitda_to_cash_q3_fy26']]
+        self.table(s,['Metric','Definition / limitation','Fixture fields'],rows,y=202,h=446,widths=[.2,.55,.25],font_px=14,numeric_cols=[])
 
         s,y=self.slide('IN13','Important information','Confidential; for Discussion Only','Parspec, Inc. standalone.')
         paragraphs=[('FICTIONAL TEMPLATE','This version uses fictional sample data. It is an illustrative design template and does not report Parspec financial results or substantiate any investment claim.'),('CONFIDENTIALITY','This presentation is confidential and for discussion only. It is not an offer to sell or a solicitation to buy any security. Any investment requires definitive agreements.'),('FORECASTS AND METRICS','Plans are forward-looking estimates. Actual results may differ materially. ARR, retention and CAC payback are operating metrics. Definitions and fixture limitations appear on the Sources and Definitions page.'),('VALUATION AND SOURCES','Peer and market values in this template are fictional assumptions. Valuation references use pre-money equity value / ARR. They are not a fairness opinion, independent appraisal or tax valuation.')]
@@ -385,6 +533,11 @@ class Gallery:
         p=d['pnl']; fy=d['fy27_plan']; rev=p['revenue']+fy['revenue']; gp=c['gp']+c['gp27']; nn=c['net_new']
         rows=[['Ending ARR']+[num(v) for v in c['arr'][6:]]+[num(c['arr'][9]),num(c['arr'][-1])],['Net new ARR']+[num(v) for v in nn]+[num(sum(nn[:4])),num(sum(nn[4:]))],['Revenue']+[num(v) for v in rev]+[num(sum(rev[:4])),num(sum(rev[4:]))],['Gross profit']+[num(v) for v in gp]+[num(sum(gp[:4])),num(sum(gp[4:]))],['Gross margin']+[percent(g/r) for g,r in zip(gp,rev)]+[percent(sum(gp[:4])/sum(rev[:4])),percent(sum(gp[4:])/sum(rev[4:]))]]
         self.table(s,['US$M']+p['quarters']+fy['quarters']+['FY26','FY27'],rows,y=434,h=212,widths=[.19]+[.075]*8+[.105,.105],font_px=14,statuses=['']+['Actual']*3+['Forecast']*5+['Mixed','Forecast'])
+        self.customer_outcomes()
+        self.customer_value()
+        self.team()
+        self.product_mechanism()
+        self.cash_bridge('IN19')
         return self.deck
 
 
@@ -392,7 +545,7 @@ def compare(out,picks_root,render_dirs):
     from PIL import Image, ImageDraw
     records=[]
     for k,(sid,lane) in enumerate(PICKS):
-        board=sid.startswith('BD'); index=k+1 if board else k-15
+        board=sid.startswith('BD'); index=(BOARD_IDS if board else INVESTOR_IDS).index(sid)+1
         stem='parspec_board_gallery' if board else 'parspec_investor_gallery'
         root=render_dirs[0 if board else 1]
         candidates=list(root.glob(f'{stem}-*.png'))
@@ -400,10 +553,20 @@ def compare(out,picks_root,render_dirs):
         picked=picks_root/lane/('01.png' if sid in ('BD01','IN01') else sid+'.png')
         a=Image.open(picked).convert('RGB').resize((1280,720)); b=Image.open(native).convert('RGB').resize((1280,720))
         canvas=Image.new('RGB',(2560,752),'white');canvas.paste(a,(0,32));canvas.paste(b,(1280,32))
-        draw=ImageDraw.Draw(canvas);draw.text((16,8),f'{sid} PICK / {lane.upper()}',fill='black');draw.text((1296,8),f'{sid} NATIVE / v3 fixture',fill='black')
+        draw=ImageDraw.Draw(canvas);draw.text((16,8),f'{sid} PICK / {lane.upper()}',fill='black');draw.text((1296,8),f'{sid} NATIVE / v4 fixture',fill='black')
         target=out/f'compare_{sid[:2]}-{sid[2:]}.png';canvas.save(target)
         records.append(dict(slide=sid,pick=lane,comparison=str(target),native_sha256=hashlib.sha256(native.read_bytes()).hexdigest(),picked_sha256=hashlib.sha256(picked.read_bytes()).hexdigest()))
     (out/'comparisons.json').write_text(json.dumps(records,indent=2)+'\n')
+    new_records=[]
+    import shutil
+    for sid in ['BD16']+[f'IN{i:02}' for i in range(15,20)]:
+        board=sid.startswith('BD'); index=(BOARD_IDS if board else INVESTOR_IDS).index(sid)+1
+        stem='parspec_board_gallery' if board else 'parspec_investor_gallery'
+        root=render_dirs[0 if board else 1]
+        native=next(p for p in root.glob(f'{stem}-*.png') if int(p.stem.rsplit('-',1)[1])==index)
+        target=out/f'render_{sid[:2]}-{sid[2:]}.png';shutil.copy2(native,target)
+        new_records.append(dict(slide=sid,render=str(target),sha256=hashlib.sha256(native.read_bytes()).hexdigest()))
+    (out/'new_slide_renders.json').write_text(json.dumps(new_records,indent=2)+'\n')
 
 
 def main():
@@ -415,8 +578,8 @@ def main():
     ap.add_argument('--picks-root',type=Path)
     args=ap.parse_args()
     raw=args.data.read_bytes();d=json.loads(raw,parse_float=D)
-    if 'FICTIONAL' not in d.get('_note','') or 'v3' not in d.get('_note',''):
-        ap.error('requires the explicitly fictional v3 fixture')
+    if 'FICTIONAL' not in d.get('_note','') or 'v4' not in d.get('_note',''):
+        ap.error('requires the explicitly fictional v4 fixture')
     args.out.mkdir(parents=True,exist_ok=True)
     sha=hashlib.sha256(raw).hexdigest();render_dirs=[]; manifests=[]
     for name,build in [('board',Gallery.board),('investor',Gallery.investor)]:

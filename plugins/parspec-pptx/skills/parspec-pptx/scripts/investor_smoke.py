@@ -1,6 +1,6 @@
 """Independently verify local fictional investor / board gallery artifacts.
 
-The oracle reads the caller's v3 fixture, never the gallery manifest or builder
+The oracle reads the caller's v4 fixture, never the gallery manifest or builder
 calculations. It checks native chart caches against independently derived data,
 their embedded workbooks, financial-table matrices, per-slide number provenance,
 type floors, fiscal labels and public-repository staging. Mutation probes run by
@@ -33,13 +33,13 @@ from assets.house import DEFAULT_PROFILE, TEMPLATE_DIR
 D = Decimal
 NS = {'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
       'c': 'http://schemas.openxmlformats.org/drawingml/2006/chart'}
-BOARD_IDS = ['BD01', 'BD01a'] + [f'BD{i:02}' for i in range(2, 16)]
-INVESTOR_IDS = [f'IN{i:02}' for i in range(1, 15)]
+BOARD_IDS = ['BD01', 'BD01a'] + [f'BD{i:02}' for i in range(2, 17)]
+INVESTOR_IDS = [f'IN{i:02}' for i in range(1, 20)]
 CHART_SLIDES = {'BD03', 'BD04', 'BD07', 'BD08', 'BD09', 'BD10',
-                'IN03', 'IN05', 'IN07', 'IN08', 'IN10', 'IN14'}
+                'IN03', 'IN05', 'IN07', 'IN08', 'IN10', 'IN14', 'BD16', 'IN19'}
 TABLE_SLIDES = {'BD01a', 'BD02', 'BD05', 'BD06', 'BD07', 'BD08',
                 'BD09', 'BD10', 'BD12', 'BD13', 'BD14', 'IN04',
-                'IN09', 'IN12', 'IN14'}
+                'IN09', 'IN12', 'IN14', 'IN15', 'IN16', 'IN18'}
 NUMBER = re.compile(r'(?<![A-Za-z0-9_])\d+(?:,\d{3})*(?:\.\d+)?')
 MONTH = re.compile(r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+20\d{2}\b', re.I)
 FONT = load_brand().font
@@ -80,6 +80,17 @@ def independent(d):
     arr = d['arr_history']['arr']
     peer = sorted(row['valuation_arr'] for row in d['comps'])
     growths = sorted(row['growth'] for row in d['comps'])
+    cv = d['customer_value']
+    value_total = sum(row['value_k'] for row in cv['benefits'])
+    require(value_total == cv['total_k'], 'v4 customer benefits do not reconcile to total')
+    value_ratio = value_total / cv['parspec_cost_k']
+    require(rounded(value_ratio, 1) == cv['roi_multiple'], 'v4 customer value / subscription ratio')
+    bridge = d['ebitda_to_cash_q3_fy26']
+    bridge_values = [bridge[key] for key in ('ebitda', 'working_capital', 'deferred_revenue', 'capex', 'interest', 'other')]
+    bridge_total = sum(bridge_values)
+    require(bridge_total == bridge['net_burn'], 'v4 EBITDA-to-cash bridge does not reconcile')
+    require(bridge_total == -d['plan_vs_actual_q3_fy26'][4]['actual'], 'v4 cash bridge does not tie to BD05 net burn')
+    require(bridge['ebitda'] == ebitda[2], 'v4 cash bridge does not tie to Q3 FY26 EBITDA')
     def quantile(frac):
         rank = D(len(peer) - 1) * frac
         lo = int(rank)
@@ -90,7 +101,9 @@ def independent(d):
                 p25=quantile(D('.25')), p75=quantile(D('.75')),
                 multiple=d['round']['pre_money'] / d['arr_bridge_q3_fy26']['end'],
                 yoy=arr[8] / arr[4] - 1, two_year=arr[8] / arr[0],
-                net_new=[arr[i] - arr[i - 1] for i in range(6, len(arr))])
+                net_new=[arr[i] - arr[i - 1] for i in range(6, len(arr))],
+                value_total=value_total, value_ratio=value_ratio,
+                bridge_values=bridge_values + [bridge_total])
 
 
 def numeric_allowances(d, c):
@@ -104,7 +117,7 @@ def numeric_allowances(d, c):
         'BD08': ['cases'], 'BD09': ['headcount'],
         'BD10': ['pipeline_q4_fy26'], 'BD11': ['decisions'],
         'BD12': ['pnl'], 'BD13': ['cash_runway', 'decisions'],
-        'BD14': ['risks'], 'BD15': ['agenda'],
+        'BD14': ['risks'], 'BD15': ['agenda'], 'BD16': ['ebitda_to_cash_q3_fy26'],
         'IN01': [], 'IN02': ['arr_history', 'unit_economics', 'pnl', 'market'],
         'IN03': ['arr_history'], 'IN04': ['cohort_ndr', 'unit_economics'],
         'IN05': ['unit_economics'], 'IN06': ['market', 'arr_bridge_q3_fy26'],
@@ -112,6 +125,8 @@ def numeric_allowances(d, c):
         'IN09': ['comps', 'round', 'arr_history'], 'IN10': ['round'],
         'IN11': ['round', 'arr_bridge_q3_fy26'], 'IN12': [],
         'IN13': [], 'IN14': ['arr_history', 'pnl', 'fy27_plan'],
+        'IN15': ['customer_outcomes'], 'IN16': ['customer_value'], 'IN17': ['team'],
+        'IN18': ['product_mechanism'], 'IN19': ['ebitda_to_cash_q3_fy26'],
     }
     allowed = {sid: set() for sid in branch}
     def add(sid, value, as_rate=False):
@@ -174,6 +189,10 @@ def numeric_allowances(d, c):
     profits = c['gp'] + c['gp27']
     add('IN14', [g / rev for g, rev in zip(profits, revenues)])
     add('IN14', [sum(c['gp']) / sum(d['pnl']['revenue']), sum(c['gp27']) / sum(d['fy27_plan']['revenue'])])
+    add('BD03', 15)  # Explicit, labeled truncated value-axis minimum.
+    add('BD09', 90)
+    add('IN16', [c['value_total'], c['value_ratio']])
+    for sid in ('BD16', 'IN19'): add(sid, c['bridge_values'])
     return allowed
 
 
@@ -229,6 +248,9 @@ def text_contract(slide, sid, allowed):
                               and abs(other.top - shape.top) / 914400 * 128 <= 130
                               and other.left < shape.left + shape.width
                               and shape.left < other.left + other.width)
+            if sid == 'BD07' and 'fiscal quarters shown above' in text.lower():
+                nearby += ' ' + ' '.join(other.text for other in slide.shapes
+                                        if other.has_text_frame and other.name.startswith('fiscal-band:'))
             fiscal_contract(text, sid, nearby)
             if sid not in {'BD12', 'IN12'}:
                 require(not re.search(r'\bn\s*=|\bfootnote\b|\bmethodology\b|\bsource\s*:', text, re.I),
@@ -257,21 +279,32 @@ def chart_expected(sid, d, c):
     if sid == 'BD07':
         vals = [d['plan_vs_actual_q3_fy26'][5]['actual']] + d['cash_runway']['cash_end']
         return [('Actual', [vals[0]] + [None] * (len(vals) - 1)), ('Forecast', [None] + vals[1:])]
-    if sid in {'BD03', 'BD09'}:
+    if sid in {'BD03', 'BD09', 'BD16', 'IN19'}:
         if sid == 'BD03':
             b = d['arr_bridge_q3_fy26']
             values = [b[k] for k in ('start', 'new', 'expansion', 'contraction', 'churn', 'end')]
             totals = {0, 5}
-        else:
+        elif sid == 'BD09':
             h = d['headcount']
             values = [sum(h['start']), sum(h['joiners']), -sum(h['leavers']), sum(h['end']), sum(h['plan_q4'])]
             totals = {0, 3, 4}
+        else:
+            values = c['bridge_values']; totals = {0, len(values) - 1}
         base, movement, running = [], [], D(0)
         for index, value in enumerate(values):
             if index in totals:
                 base.append(D(0)); movement.append(value); running = value
             else:
-                base.append(min(running, running + value)); movement.append(abs(value)); running += value
+                low, high = sorted((running, running + value))
+                # OOXML stacks positive and negative series separately. Below
+                # zero, the hidden base is the endpoint nearest zero and the
+                # movement is negative, even for a favorable semantic delta.
+                if high <= 0:
+                    base.append(high); movement.append(low - high)
+                else:
+                    require(low >= 0, f'{sid}: cross-zero bridge needs a split-series oracle')
+                    base.append(low); movement.append(high - low)
+                running += value
         return [('Hidden base', base), ('Movement', movement)]
     if sid == 'BD08': return [('Value', [row['min_cash'] for row in d['cases']])]
     if sid == 'BD10': return [(s['stage'], [v]) for s, v in zip(d['pipeline_q4_fy26']['stages'], c['weights'])]
@@ -292,20 +325,13 @@ def category_expected(sid, d):
     if sid == 'IN03': return d['arr_history']['quarters']
     if sid == 'BD03': return ['Start\nQ3 FY26', 'New logos', 'Expansion', 'Contraction', 'Churn', 'End\nQ3 FY26']
     if sid == 'BD09': return ['Start\nQ3 FY26', 'Joiners', 'Leavers', 'End\nQ3 FY26', 'Plan\nQ4 FY26']
+    if sid in {'BD16', 'IN19'}: return ['EBITDA', 'Working capital', 'Deferred revenue', 'Software & capex', 'Interest', 'Other', 'Net burn']
     if sid == 'BD08': return [row['case'] for row in d['cases']]
     if sid == 'BD10': return ['Weighted pipeline']
     if sid == 'IN05': return d['unit_economics']['gross_margin_trend']['quarters']
     if sid == 'IN10': return [row['use'] for row in d['round']['use_of_funds']]
     if sid == 'BD07':
-        result = ['Oct 2026\n(Q3 FY26)']
-        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        for label in d['cash_runway']['months']:
-            name, year_text = label.split(); year = 2000 + int(year_text)
-            month = months.index(name) + 1
-            fy = year if month >= 2 else year - 1
-            quarter = ((month - 2) % 12) // 3 + 1
-            result.append(f'{name} {year}\n(Q{quarter} FY{str(fy)[-2:]})')
-        return result
+        return ['Oct'] + [label.split()[0] for label in d['cash_runway']['months']]
     return None
 
 
@@ -336,8 +362,10 @@ def chart_contract(slide, sid, d, c, allowed):
     charts = [shape for shape in slide.shapes if shape.has_chart]
     require(len(charts) == (1 if sid in CHART_SLIDES else 0), f'{sid}: native chart count {len(charts)}')
     # Chart-looking names must actually reference editable chart objects.
+    chart_primitives = {'column_actual_forecast', 'waterfall', 'line_trend',
+                        'combo_bar_line', 'stacked_bar', 'scatter_labeled', 'doughnut', 'bar_ranked'}
     for shape in slide.shapes:
-        if shape.name.startswith('native:') and shape.name.split(':', 1)[1] not in {'fin_table', 'heatmap_table'}:
+        if shape.name.startswith('native:') and shape.name.split(':', 1)[1] in chart_primitives:
             require(shape.has_chart, f'{sid}: chart primitive is not a native chart')
     for shape in charts:
         chart = shape.chart
@@ -345,14 +373,28 @@ def chart_contract(slide, sid, d, c, allowed):
         require(len(chart._chartSpace.xpath('.//c:valAx/c:majorGridlines')) <= 1, f'{sid}: excessive horizontal gridlines')
         require(not chart._chartSpace.xpath('.//c:valAx/c:minorGridlines'), f'{sid}: minor horizontal gridlines')
         expected = chart_expected(sid, d, c)
+        by_name = {series.name: series for series in chart.series}
+        if sid in {'BD03', 'BD09', 'BD16', 'IN19'} and 'Label anchors' in by_name:
+            base, moves = expected[0][1], expected[1][1]
+            anchors = [max(b, b + v) for b, v in zip(base, moves)]
+            expected.append(('Label anchors', anchors))
         categories = category_expected(sid, d)
         if categories is not None:
             actual_categories = [category.label for category in chart.plots[0].categories]
             require(actual_categories == categories, f'{sid}: chart category / fiscal label mismatch')
             for category in actual_categories: fiscal_contract(category, sid)
         require(len(chart.series) == len(expected), f'{sid}: series count')
-        by_name = {series.name: series for series in chart.series}
         require(set(by_name) == {name for name, _ in expected}, f'{sid}: chart series names')
+        if sid in {'BD16', 'IN19'}:
+            movement = by_name['Movement']
+            # LibreOffice ignores explicit negative dPt colors unless the
+            # actual point has inversion disabled. A series-level flag alone
+            # does not preserve fills when points override series formatting.
+            for index, value in enumerate(movement.values):
+                if value >= 0: continue
+                points = movement._element.xpath(f'./c:dPt[c:idx[@val="{index}"]]')
+                require(len(points) == 1 and points[0].xpath('./c:invertIfNegative[@val="0"]'),
+                        f'{sid}: visible negative point {index} must explicitly disable fill inversion')
         for name, values in expected:
             series = by_name[name]
             if sid in {'IN07', 'IN08'}:
@@ -403,7 +445,8 @@ def pnl_expected(d, c, detail=False):
 
 def table_contract(slide, sid, d, c):
     tables = [table_matrix(s) for s in slide.shapes if s.has_table]
-    require(bool(tables) == (sid in TABLE_SLIDES), f'{sid}: native table presence')
+    if sid != 'IN17':
+        require(bool(tables) == (sid in TABLE_SLIDES), f'{sid}: native table presence')
     # Measure the supported native spacing rather than assuming Montserrat's
     # proportional default digits are tabular. Restrict to financial body cells.
     metrics = load_brand().investor['financial_digit_metrics']
@@ -481,6 +524,127 @@ def table_contract(slide, sid, d, c):
         match_rows(expected, 'financial plan')
 
 
+def expanded_contract(slide, sid, d, c):
+    """PASS2 composition and new evidence checks, independent of gallery code."""
+    shapes = list(slide.shapes)
+    text_boxes = [shape for shape in shapes if shape.has_text_frame and shape.text.strip()]
+    tables = [shape for shape in shapes if shape.has_table]
+    if sid == 'BD02':
+        require(len(tables) == 1 and len(tables[0].table.rows) == 2 and len(tables[0].table.columns) == 3,
+                'BD02: six KPIs must be a native 3×2 table')
+        b = d['arr_bridge_q3_fy26']; p = d['plan_vs_actual_q3_fy26']
+        labels = ['Ending ARR', 'Net new ARR', 'NDR · trailing year', 'Gross margin', 'Net burn', 'Cash']
+        values = ['$' + fmt(b['end']) + 'M', '$' + fmt(b['end'] - b['start']) + 'M',
+                  pct(d['unit_economics']['ndr']), pct(d['pnl']['gross_margin'][2]),
+                  '$' + fmt(p[4]['actual']) + 'M', '$' + fmt(p[5]['actual']) + 'M']
+        cells = [cell for row in tables[0].table.rows for cell in row.cells]
+        for cell, label, value in zip(cells, labels, values):
+            paragraphs = [para for para in cell.text_frame.paragraphs if para.text.strip()]
+            require(len(paragraphs) == 3, 'BD02: each KPI needs label, value and comparator')
+            require(paragraphs[0].text.casefold() == label.casefold(), f'BD02: KPI label {label}')
+            require(paragraphs[1].text == value, f'BD02: KPI value {label}')
+            require(all(run.font.color.rgb == load_brand().role('investor_text') for run in paragraphs[1].runs),
+                    f'BD02: actual figure must be white: {label}')
+        require(tables[0].left / 914400 * 128 < 100 and tables[0].width / 914400 * 128 <= 800,
+                'BD02: metric grid must leave a right-side interpretation rail')
+        rail = '\n'.join(shape.text for shape in text_boxes if shape.left / 914400 * 128 >= 820 and shape.top / 914400 * 128 < 672)
+        require('WHAT CHANGED' in rail.upper(), 'BD02: what-changed rail missing')
+        require(fmt(p[0]['plan'] - b['start']) in rail and fmt(b['end'] - b['start']) in rail,
+                'BD02: net-new miss absent from change rail')
+    if sid in {'BD03', 'BD09'}:
+        chart_shape = next(shape for shape in shapes if shape.has_chart)
+        minimum = D(15 if sid == 'BD03' else 90)
+        require(D(str(chart_shape.chart.value_axis.minimum_scale)) == minimum,
+                f'{sid}: movement visibility requires declared truncated axis')
+        labels = [shape for shape in text_boxes if shape.name == 'waterfall:axis-start-label']
+        require(len(labels) == 1 and str(minimum) in labels[0].text and 'start' in labels[0].text.lower(),
+                f'{sid}: explicit axis-start label missing')
+        label = labels[0]
+        require(chart_shape.left <= label.left <= chart_shape.left + chart_shape.width and
+                chart_shape.top <= label.top <= chart_shape.top + chart_shape.height,
+                f'{sid}: axis-start label is outside chart area')
+        require('Label anchors' in {series.name for series in chart_shape.chart.series}, f'{sid}: native labels-above anchors missing')
+    if sid == 'BD07':
+        # Fiscal-band labels must occur in chronological order directly above
+        # the chart; exact short-month categories are checked by chart_contract.
+        chart = next(shape for shape in shapes if shape.has_chart)
+        bands = [shape for shape in text_boxes if shape.text.strip() in {'Q3 FY26', 'Q4 FY26', 'Q1 FY27', 'Q2 FY27', 'Q3 FY27'}
+                 and shape.top < chart.top and (chart.top - shape.top) / 914400 * 128 <= 80]
+        bands.sort(key=lambda shape: shape.left)
+        require([shape.text.strip() for shape in bands] == ['Q3 FY26', 'Q4 FY26', 'Q1 FY27', 'Q2 FY27', 'Q3 FY27'],
+                'BD07: fiscal band missing / out of order')
+        require([shape.name for shape in bands] == [f'fiscal-band:{start}:{count}:{period}' for start, count, period in
+                [(0, 1, 'Q3 FY26'), (1, 3, 'Q4 FY26'), (4, 3, 'Q1 FY27'), (7, 3, 'Q2 FY27'), (10, 3, 'Q3 FY27')]],
+                'BD07: fiscal bands do not map the short-month sequence')
+    if sid == 'IN07':
+        chart = next(shape for shape in shapes if shape.has_chart)
+        require(chart.chart._chartSpace.xpath('.//c:scatterChart'), 'IN07: native XY scatter missing')
+        rects = [shape for shape in shapes if shape._element.xpath('.//a:prstGeom[@prst="rect"]')
+                 and shape.width / 914400 * 128 >= 500 and shape.height / 914400 * 128 >= 200]
+        require(rects, 'IN07: editable outer quadrant frame missing')
+        frame = min(rects, key=lambda shape: shape.width * shape.height)
+        # Center rules can be native connectors or one-pixel rectangles.
+        horizontal = [shape for shape in shapes if shape is not frame and shape.width >= frame.width * .7 and shape.height / 914400 * 128 <= 3
+                      and abs(shape.top - (frame.top + frame.height / 2)) / 914400 * 128 <= 12]
+        vertical = [shape for shape in shapes if shape is not frame and shape.height >= frame.height * .7 and shape.width / 914400 * 128 <= 3
+                    and abs(shape.left - (frame.left + frame.width / 2)) / 914400 * 128 <= 12]
+        require(horizontal and vertical, 'IN07: editable center cross lines missing')
+        text = ' '.join(shape.text for shape in text_boxes)
+        require(len(re.findall(r'\bHIGH\b', text)) >= 2 and len(re.findall(r'\bLOW\b', text)) >= 2,
+                'IN07: HIGH/LOW axis ends missing')
+    if sid == 'IN15':
+        require(len(tables) == 1, 'IN15: native customer-outcome table required')
+        matrix = table_matrix(tables[0]); rows = matrix[1:]
+        require(len(rows) == len(d['customer_outcomes']) and len(matrix[0]) == 5, 'IN15: three ruled rows / five columns')
+        for row, outcome in zip(rows, d['customer_outcomes']):
+            require(outcome['customer'] in row[0], 'IN15: customer identity')
+            require(all(outcome[key] in row[1] for key in ('metric', 'before', 'after')), 'IN15: source before/after metric')
+            require(row[2] == outcome['period'] and row[3] == outcome['status'] and row[4] == outcome['attribution'],
+                    'IN15: period, measured status or attribution changed')
+    if sid == 'IN16':
+        require(len(tables) == 1, 'IN16: native customer-value table required')
+        rows = table_matrix(tables[0])[1:]
+        require(len(rows) == len(d['customer_value']['benefits']) + 1 and all(len(row) == 4 for row in rows),
+                'IN16: benefit/mechanism/value/status rows')
+        for row, benefit in zip(rows, d['customer_value']['benefits']):
+            require(row[0] == benefit['benefit'] and row[1] == benefit['mechanism'], 'IN16: benefit mechanism changed')
+            require(fmt(benefit['value_k']) in row[2] and row[3] == benefit['status'], 'IN16: value or measured/estimated status changed')
+        require(fmt(c['value_total']) in rows[-1][2], 'IN16: benefit total must sum source rows')
+        require(rows[-1][0] == 'Total annual value' and rows[-1][1] == '' and rows[-1][3] == 'Mixed',
+                'IN16: total scope and mixed measured/estimated status')
+        text = '\n'.join(shape.text for shape in text_boxes)
+        require(multiple(c['value_ratio']) in text, 'IN16: value/subscription ratio missing')
+        cost = fmt(d['customer_value']['parspec_cost_k'])
+        require(cost in text, 'IN16: annual subscription denominator missing')
+    if sid == 'IN17':
+        portraits = [shape for shape in shapes if shape._element.xpath('.//a:prstGeom[@prst="ellipse"]')]
+        require(len(portraits) == len(d['team']) == 6, 'IN17: six editable portrait placeholders required')
+        require(len({(shape.width, shape.height) for shape in portraits}) == 1 and all(shape.width == shape.height for shape in portraits),
+                'IN17: equal circular portrait placeholders required')
+        text = '\n'.join(shape.text for shape in text_boxes) + '\n' + '\n'.join(cell.text for table in tables for row in table.table.rows for cell in row.cells)
+        for person in d['team']:
+            require(person['role'] in text and person['name'] in text and person['credential'] in text, 'IN17: name/role/credential placeholder missing')
+    if sid == 'IN18':
+        require(len(tables) == 3, 'IN18: three native mechanism bands required')
+        all_rows = [row for table in tables for row in table_matrix(table)]
+        for group in ('inputs', 'engine', 'outputs'):
+            for item in d['product_mechanism'][group]:
+                cells = [cell for row in all_rows for cell in row if item in cell]
+                require(len(cells) == 1, f'IN18: mechanism item coverage {item}')
+                status = d['product_mechanism']['status'].get(item, 'Live')
+                require(status in cells[0], f'IN18: {item} status must be {status}')
+        connectors = [shape for shape in shapes if shape._element.tag == qn('p:cxnSp')]
+        require(len(connectors) >= 2, 'IN18: editable connectors between bands missing')
+    if sid in {'BD16', 'IN19'}:
+        chart = next(shape.chart for shape in shapes if shape.has_chart)
+        by_name = {series.name: series for series in chart.series}
+        series = by_name.get('Label anchors', by_name['Movement'])
+        labels = {int(label.find(qn('c:idx')).get('val')): ''.join(label.xpath('.//c:rich//a:t/text()'))
+                  for label in series._element.findall(qn('c:dLbls'))[0].findall(qn('c:dLbl'))}
+        expected = [('+' + fmt(value, 2)) if value > 0 else fmt(value, 2) for value in c['bridge_values']]
+        require(labels == dict(enumerate(expected)), f'{sid}: native signed two-decimal cash-bridge labels')
+
+
 def staging_contract():
     def git(*args): return subprocess.check_output(['git', *args], cwd=REPO, text=True).splitlines()
     changed = set(git('diff', '--cached', '--name-only')) | set(git('diff', '--name-only', '--diff-filter=A', 'HEAD'))
@@ -490,7 +654,7 @@ def staging_contract():
     return len(changed)
 
 
-def mutation_probes(prs, ids, d, c, allowances):
+def mutation_probes(prs, ids, d, c, allowances, investor):
     """Mutate in-memory slide copies and require each guard to reject them."""
     from pptx.slide import Slide
     sid = 'BD04'; source = prs.slides[ids.index(sid)]
@@ -538,6 +702,42 @@ def mutation_probes(prs, ids, d, c, allowances):
         rejected('corrupt native chart cache', slide, lambda s: chart_contract(s, sid, d, c, allowances[sid]))
     finally:
         value.text = original
+    wrong_total = deepcopy(d)
+    wrong_total['customer_value']['total_k'] += D('.1')
+    rejected('customer value source sum', wrong_total, independent)
+    wrong_bridge = deepcopy(d)
+    wrong_bridge['ebitda_to_cash_q3_fy26']['other'] -= D('.1')
+    rejected('cash bridge source reconciliation', wrong_bridge, independent)
+    outcome_source = investor.slides[INVESTOR_IDS.index('IN15')]
+    wrong_status = Slide(deepcopy(outcome_source._element), outcome_source.part)
+    table = next(shape.table for shape in wrong_status.shapes if shape.has_table)
+    table.cell(1, 3).text = 'Estimated'
+    rejected('customer outcome status', wrong_status, lambda s: expanded_contract(s, 'IN15', d, c))
+    value_source = investor.slides[INVESTOR_IDS.index('IN16')]
+    wrong_sum = Slide(deepcopy(value_source._element), value_source.part)
+    table = next(shape.table for shape in wrong_sum.shapes if shape.has_table)
+    table.cell(len(table.rows) - 1, 2).text = fmt(d['customer_value']['benefits'][0]['value_k'])
+    rejected('customer value displayed sum', wrong_sum, lambda s: expanded_contract(s, 'IN16', d, c))
+    product_source = investor.slides[INVESTOR_IDS.index('IN18')]
+    wrong_product = Slide(deepcopy(product_source._element), product_source.part)
+    for shape in wrong_product.shapes:
+        if not shape.has_table: continue
+        for row in shape.table.rows:
+            for cell in row.cells:
+                if 'Track orders' in cell.text: cell.text = cell.text.replace('Planned', 'Live')
+    rejected('planned capability promoted to live', wrong_product, lambda s: expanded_contract(s, 'IN18', d, c))
+    bridge_slide = prs.slides[ids.index('BD16')]
+    bridge_chart = next(shape.chart for shape in bridge_slide.shapes if shape.has_chart)
+    movement = next(series for series in bridge_chart.series if series.name == 'Movement')
+    point = movement._element.xpath('./c:dPt[c:idx[@val="0"]]')[0]
+    inversion = point.find(qn('c:invertIfNegative'))
+    position = point.index(inversion)
+    try:
+        point.remove(inversion)
+        rejected('negative point fill inversion omitted', bridge_slide,
+                 lambda s: chart_contract(s, 'BD16', d, c, allowances['BD16']))
+    finally:
+        point.insert(position, inversion)
     return probes
 
 
@@ -552,10 +752,91 @@ def verify(path, ids, d, c, allowances, sha):
         text_contract(slide, sid, allowances[sid])
         chart_contract(slide, sid, d, c, allowances[sid])
         table_contract(slide, sid, d, c)
+        expanded_contract(slide, sid, d, c)
         charts += sum(shape.has_chart for shape in slide.shapes)
         tables += sum(shape.has_table for shape in slide.shapes)
     return prs, dict(path=str(path), slides=len(ids), native_charts=charts, native_tables=tables,
                      sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+
+
+def render_contract(root, board, investor, d):
+    """Check actual rendered evidence only when --render-root is supplied.
+
+    Native OOXML and an editable workbook can both be correct while a renderer
+    drops every negative fill. Count role-colored pixels inside the native chart
+    frame, excluding the slide header, footer and callout. PDF text additionally
+    catches wrapped cash-month labels that structural category checks cannot.
+    """
+    from PIL import Image
+    brand = load_brand()
+    checks, errors = [], []
+    minimums = {'accent': 1000, 'positive': 100, 'negative': 100}
+    colors = {role: tuple(brand.role('investor_' + role)) for role in minimums}
+    for name, prs, ids, sid in [('board', board, BOARD_IDS, 'BD16'), ('investor', investor, INVESTOR_IDS, 'IN19')]:
+        index = ids.index(sid)
+        directory = root / f'{name}_gallery_png'
+        stem = f'parspec_{name}_gallery'
+        candidates = [path for path in directory.glob(stem + '-*.png')
+                      if path.stem.rsplit('-', 1)[-1].isdigit() and int(path.stem.rsplit('-', 1)[-1]) == index + 1]
+        if len(candidates) != 1:
+            errors.append(f'{sid}: exactly one rendered PNG required for slide {index + 1}')
+            checks.append(dict(slide=sid, check='waterfall_fills', result='FAIL', reason=errors[-1]))
+            continue
+        path = candidates[0]
+        shape = next(shape for shape in prs.slides[index].shapes if shape.has_chart)
+        with Image.open(path) as image:
+            image = image.convert('RGB')
+            box = (int(shape.left / prs.slide_width * image.width),
+                   int(shape.top / prs.slide_height * image.height),
+                   int((shape.left + shape.width) / prs.slide_width * image.width),
+                   int((shape.top + shape.height) / prs.slide_height * image.height))
+            cropped = image.crop(box)
+            histogram = cropped.getcolors(maxcolors=cropped.width * cropped.height)
+            counts = {role: sum(count for count, pixel in histogram
+                                if max(abs(a - b) for a, b in zip(pixel, rgb)) <= 2)
+                      for role, rgb in colors.items()}
+        failed = {role: count for role, count in counts.items() if count < minimums[role]}
+        if failed:
+            errors.append(f'{sid}: rendered waterfall fills missing / too small: {failed}; minimums {minimums}')
+        checks.append(dict(slide=sid, check='waterfall_fills', result='FAIL' if failed else 'PASS',
+                           png=str(path), png_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                           chart_crop_px=list(box), role_pixels=counts, minimum_role_pixels=minimums,
+                           rgb_tolerance=2))
+    pdf = root / 'board_gallery_png' / 'parspec_board_gallery.pdf'
+    if pdf.exists():
+        import fitz
+        index = BOARD_IDS.index('BD07')
+        chart = next(shape for shape in board.slides[index].shapes if shape.has_chart)
+        # Native EMUs convert directly to PDF points. The bottom 15% of the
+        # chart contains category ticks, and excludes the range caption below.
+        rect = fitz.Rect(chart.left / 12700, (chart.top + chart.height * .85) / 12700,
+                         (chart.left + chart.width) / 12700, (chart.top + chart.height) / 12700)
+        with fitz.open(pdf) as document:
+            require(len(document) == len(BOARD_IDS), 'rendered board PDF slide count')
+            page = document[index]
+            lines = [line for block in page.get_text('dict', clip=rect)['blocks'] if 'lines' in block for line in block['lines']]
+            records = []
+            fiscal_wrap = []
+            month_pattern = re.compile(r'^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$')
+            for line in lines:
+                text = ''.join(span['text'] for span in line['spans']).strip()
+                if re.search(r'\bFY\d{2,4}\b|\bQ[1-4]\b', text): fiscal_wrap.append(text)
+                if month_pattern.fullmatch(text):
+                    records.append(dict(text=text, bbox=list(line['bbox'])))
+            records.sort(key=lambda record: record['bbox'][0])
+        expected = category_expected('BD07', d)
+        matched = [record['text'] for record in records] == expected
+        centers = [(record['bbox'][1] + record['bbox'][3]) / 2 for record in records]
+        single_line = bool(centers) and max(centers) - min(centers) <= 1.5
+        passed = matched and single_line and not fiscal_wrap
+        if not passed:
+            errors.append(f'BD07: rendered month labels must be thirteen single-line categories; found {[record["text"] for record in records]}, fiscal wrap={fiscal_wrap}')
+        checks.append(dict(slide='BD07', check='cash_month_labels', result='PASS' if passed else 'FAIL',
+                           pdf=str(pdf), pdf_sha256=hashlib.sha256(pdf.read_bytes()).hexdigest(),
+                           clip_points=list(rect), labels=records, fiscal_wrap=fiscal_wrap))
+    else:
+        checks.append(dict(slide='BD07', check='cash_month_labels', result='NOT_AVAILABLE', reason='Rendered board PDF absent'))
+    return dict(result='FAIL' if errors else 'PASS', root=str(root), checks=checks, errors=errors)
 
 
 def main():
@@ -564,24 +845,29 @@ def main():
     ap.add_argument('--board', type=Path, default=TEMPLATE_DIR / 'parspec_board_gallery.pptx')
     ap.add_argument('--investor', type=Path, default=TEMPLATE_DIR / 'parspec_investor_gallery.pptx')
     ap.add_argument('--evidence', type=Path, help='Optional private JSON verification receipt')
+    ap.add_argument('--render-root', type=Path, help='Explicit local Templates directory: verify waterfall PNG fills and cash-label PDF text')
     ap.add_argument('--self-test', action='store_true', help='Mutation probes also run by default')
     args = ap.parse_args()
     raw = args.data.read_bytes(); d = json.loads(raw, parse_float=D)
-    require('FICTIONAL' in d.get('_note', '') and 'v3' in d.get('_note', ''), 'explicit fictional v3 fixture required')
+    require('FICTIONAL' in d.get('_note', '') and 'v4' in d.get('_note', ''), 'explicit fictional v4 fixture required')
     require(DEFAULT_PROFILE == 'master', 'master must remain the default')
     sha = hashlib.sha256(raw).hexdigest(); c = independent(d)
     allowances = numeric_allowances(d, c)
     board, b = verify(args.board, BOARD_IDS, d, c, allowances, sha)
-    _, i = verify(args.investor, INVESTOR_IDS, d, c, allowances, sha)
-    mutations = mutation_probes(board, BOARD_IDS, d, c, allowances)
+    investor, i = verify(args.investor, INVESTOR_IDS, d, c, allowances, sha)
+    mutations = mutation_probes(board, BOARD_IDS, d, c, allowances, investor)
     staged = staging_contract()
-    receipt = dict(result='PASS', fixture_sha256=sha, decks=[b, i], mutation_probes=mutations,
+    rendered = render_contract(args.render_root, board, investor, d) if args.render_root else dict(result='NOT_RUN', reason='--render-root not supplied')
+    receipt = dict(result='FAIL' if rendered['result'] == 'FAIL' else 'PASS', fixture_sha256=sha, decks=[b, i], mutation_probes=mutations,
+                   render_checks=rendered,
                    staged_or_added_paths_checked=staged,
                    limitations='Structural/data verification; visual review, PowerPoint fidelity and PM/brand acceptance are separate.')
     if args.evidence:
         args.evidence.parent.mkdir(parents=True, exist_ok=True)
         args.evidence.write_text(json.dumps(receipt, indent=2) + '\n')
+    require(rendered['result'] != 'FAIL', '\n'.join(rendered.get('errors', [])))
     print(f'PASS: {b["slides"] + i["slides"]} slides; {b["native_charts"] + i["native_charts"]} native charts with source-exact caches and coherent workbooks; financial tables; per-slide numeric provenance; text/fiscal/source guards; {len(mutations)} rejected mutations; staging guard')
+    print('Rendered checks: ' + rendered['result'])
 
 
 if __name__ == '__main__':

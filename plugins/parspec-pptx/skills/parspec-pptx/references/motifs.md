@@ -126,3 +126,14 @@ uses wider spacing and larger hero metrics. Both retain one idea per page, no
 more than two content blocks where practical, one divider design per deck and
 editable evidence throughout. Register acceptance, rendering fidelity and
 financial-source acceptance remain separate checks.
+
+### Pass 2 additions
+
+The v4 fixture supplies fictional customer outcomes, annual customer value,
+leadership placeholders, product capability status and an EBITDA-to-cash bridge.
+Keep measured and estimated benefits distinct, portrait/attribution placeholders
+visible, and planned capabilities labelled. BD-02 uses a native three-column,
+two-row metric table plus a right rail. Truncated ARR/headcount waterfalls name
+the starting axis value and place native labels above the bars. Cash uses short
+month labels with a chronological fiscal band. Competition retains a native XY
+plot inside an editable quadrant frame with HIGH/LOW endpoints.
