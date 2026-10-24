@@ -1,7 +1,7 @@
 ---
 name: parspec-pptx
-description: "Generate Parspec-branded editable .pptx decks via python-pptx, reading the design-model.yaml SSoT. Two registers: (1) house — builds on a company deck used as a template (logo, footer, page numbers, layout backgrounds; 10in canvas). Profiles: master (default; the Sept-2026 master deck — black + warm glow, ALL-CAPS titles with an orange phrase, numbered cards, panel rows, problem→solution rows, umber funnels, CAD brackets) and townhall (Q2-26 town hall — left-bar cards, KPI tiles, chevrons, section strips). (2) brand_artifacts — 13.333in canvas, drawn chrome, L1–L12 for standalone board memos. Headless LibreOffice render + PNG verify loop (PowerPoint optional). Use when the deliverable must open or be edited in PowerPoint, Keynote or Google Slides — all-hands / town hall sections, CEO and fundraising updates, sales decks, board decks. Triggers: 'parspec pptx', 'parspec powerpoint', 'board deck for parspec', 'town hall slides', 'all-hands deck', 'use our new deck format', '/parspec-pptx', 'editable pptx with parspec brand'."
-version: 0.3.0
+description: "Generate Parspec-branded editable .pptx decks via python-pptx, reading the design-model.yaml SSoT. Two registers: (1) house — builds on a company deck used as a template (logo, footer, page numbers, layout backgrounds; 10in canvas). Profiles: sales (opt-in proposed, pending ratification), master (default; the Sept-2026 master deck — black + warm glow, ALL-CAPS titles with an orange phrase, numbered cards, panel rows, problem→solution rows, umber funnels, CAD brackets) and townhall (Q2-26 town hall — left-bar cards, KPI tiles, chevrons, section strips). (2) brand_artifacts — 13.333in canvas, drawn chrome, L1–L12 for standalone board memos. Headless LibreOffice render + PNG verify loop (PowerPoint optional). Use when the deliverable must open or be edited in PowerPoint, Keynote or Google Slides — all-hands / town hall sections, CEO and fundraising updates, sales decks, board decks. Triggers: 'parspec pptx', 'parspec powerpoint', 'board deck for parspec', 'town hall slides', 'all-hands deck', 'use our new deck format', '/parspec-pptx', 'editable pptx with parspec brand'."
+version: 0.4.0
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion]
 ---
 
@@ -23,9 +23,40 @@ Brand contract: reads `../parspec-design/skills/parspec-design/design-model.yaml
 | Profile | Source deck | Look | Default |
 |---|---|---|---|
 | **master** | Sept-2026 company master deck ("Parspec Overview") | Pure black with a warm glow, ALL-CAPS 25 pt light titles with a trailing orange phrase, no eyebrow; numbered cards with orange top bars, translucent panel rows, problem → solution rows, umber layer fills, CAD corner brackets | **yes** — the current company format |
+| **sales** | Current local sales master template | **Proposed, opt-in**: pure black; untracked bold orange eyebrow; 42px mixed-case bold title; square top-rule cards, selective brackets, native donut/process/table motifs | no — pending ratification; `master` remains default |
 | **townhall** | Q2-26 town hall | #0F0F0F, bold mixed-case titles with an eyebrow, left-accent-bar cards, KPI tiles, chevrons, numbered section strips | legacy; use when adding to a town hall built on that master |
 
 When the user points at a newer company deck ("use our updated formatting"), regenerate that profile's template from it first. If its layouts differ, add a profile to `PROFILES` in `assets/house.py` rather than hard-coding a one-off deck. Every color still comes from design-model.yaml roles; the umber ramp (v2.2.0) was added for the master profile's layer fills.
+
+### Proposed sales profile (v0.4.0)
+
+Use `HouseDeck(profile="sales")` explicitly. Read `references/motifs.md` and
+`references/archetypes.md` before composing. All new colors, sizes and font
+specifications come from `Brand.sales` / `sales_*` roles in design-model 2.3.0.
+Existing profiles retain their roles and layouts; `DEFAULT_PROFILE` stays
+`master`. The new ownership fill and scoped donut palette are proposals pending
+ratification, not global exemptions to the locked brand policy.
+
+```bash
+python3 scripts/make_template.py --profile sales --logo "<local wordmark.png>" "<sales master export>.pptx"
+python3 scripts/sales_gallery.py --glow "<local orange-glow.png>" --render
+python3 scripts/sales_smoke.py --gallery ~/Documents/Claude/Templates/parspec_sales_gallery.pptx
+# Local only: ~/Documents/Claude/Templates/parspec_sales_gallery.pptx
+# PNGs: ~/Documents/Claude/Templates/sales_gallery_png/
+```
+
+The ten-slide gallery uses synthetic sample copy. Templates, reference decks,
+images and rendered slides remain local and must never be committed. Use the
+original wordmark and glow asset from local sources; native shapes preserve the
+editable donut, arcs, rail and comparison geometry. `SOFFICE_PROFILE` may select
+a private LibreOffice profile URI (for example `file:///tmp/sales_lo_profile`).
+The divider also checks `$PARSPEC_PPTX_SALES_GLOW` or the local
+`~/Documents/Claude/Templates/parspec_sales_glow.png`; no image is shipped in the plugin.
+
+Paper-warm panels, serif exhibit surfaces and universal brackets are **not in
+current sales register (0/290 slides)**; existing tokens remain for their own
+registers. Selective S05/S13 brackets remain valid. See archetypes for exact
+14px content floors, source notes, highlights and the three-device chrome budget.
 
 ### House templates (company-internal — never commit them)
 
@@ -195,6 +226,10 @@ parspec-craft lint <generated.pptx>
 | `assets/brand.py` | Loads `design-model.yaml`, resolves `{ref.path}` tokens, exposes `Brand.cta`, `Brand.surface_paper`, etc. as `RGBColor` |
 | `assets/builder.py` | Low-level helpers: `new_deck`, `blank`, `add_text`, `add_rect`, `add_line`, `corner_brackets`, `footer`, motif accents |
 | `assets/shapes.py` | Canvas-agnostic composition + diagram primitives on the role-based `Palette`: `text`, `shape` (alpha), `rule`, `card`, `kpi_tile`, `chip_row`, `funnel` (alpha / umber), `process`, `question_cards`, `evidence_rows`, `section_strip`, `arcs`, and master-format `tile_row`, `numbered_cards`, `panel_rows`, `problem_solution`, `bracket_box`, `crosshair` |
+| `assets/motif.py` | Proposed role-based sales primitives; all geometry measured at 128px/in |
+| `references/motifs.md` | Sales composition, type, highlight and chrome rules |
+| `references/archetypes.md` | S01–S10 picked families plus supplemental sales recipes |
+| `scripts/sales_gallery.py` | Local synthetic ten-slide sales gallery and LibreOffice render |
 | `assets/house.py` | `HouseDeck(profile)` + `PROFILES` — opens a local house template; `cover`, `agenda`, `divider`, `content`, `title`, `eyebrow`, `logo`, `notes`, `placeholder` |
 | `assets/townhall.py` | Back-compat `TownHall` = `HouseDeck("townhall")` |
 | `assets/__init__.py` | One-line package import surface |

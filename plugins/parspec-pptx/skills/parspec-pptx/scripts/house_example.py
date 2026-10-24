@@ -28,6 +28,9 @@ AGENDA = [
 
 
 def build(profile: str, out: Path) -> Path:
+    if profile == "sales":
+        from sales_gallery import build as build_sales
+        return build_sales(out)
     d = HouseDeck(profile)
     pal, X0, XW, TOP, BOTTOM = d.pal, d.x0, d.xw, d.top, d.bottom
 
