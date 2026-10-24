@@ -650,7 +650,7 @@ def staging_contract():
     changed = set(git('diff', '--cached', '--name-only')) | set(git('diff', '--name-only', '--diff-filter=A', 'HEAD'))
     for path in changed:
         require(Path(path).suffix.lower() not in {'.pptx', '.ppt', '.png', '.pdf', '.jpg', '.jpeg', '.webp', '.key'}, f'public repo artifact staged/added: {path}')
-        require(not re.search(r'(^|/)(?:_refs|templates|renders)(/|$)', path, re.I), f'public repo private asset path: {path}')
+        require(not re.search(r'(^|/)(?:_refs|templates|renders|seriesb_story)(/|$)|real_content', path, re.I), f'public repo private asset path: {path}')
     return len(changed)
 
 
@@ -842,12 +842,17 @@ def render_contract(root, board, investor, d):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--data', type=Path, required=True)
+    ap.add_argument('--story', type=Path, nargs='+', help='Check only the supplied Series B story decks against the incubation fixture')
     ap.add_argument('--board', type=Path, default=TEMPLATE_DIR / 'parspec_board_gallery.pptx')
     ap.add_argument('--investor', type=Path, default=TEMPLATE_DIR / 'parspec_investor_gallery.pptx')
     ap.add_argument('--evidence', type=Path, help='Optional private JSON verification receipt')
     ap.add_argument('--render-root', type=Path, help='Explicit local Templates directory: verify waterfall PNG fills and cash-label PDF text')
     ap.add_argument('--self-test', action='store_true', help='Mutation probes also run by default')
     args = ap.parse_args()
+    if args.story:
+        from story_smoke import run
+        run(args.data,args.story,args.evidence)
+        return
     raw = args.data.read_bytes(); d = json.loads(raw, parse_float=D)
     require('FICTIONAL' in d.get('_note', '') and 'v4' in d.get('_note', ''), 'explicit fictional v4 fixture required')
     require(DEFAULT_PROFILE == 'master', 'master must remain the default')

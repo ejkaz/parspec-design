@@ -1,0 +1,337 @@
+{
+ "_note": "ILLUSTRATIVE DUMMY NUMBERS for incubation slides IN-23..IN-31. Not Parspec data. Every total asserted.",
+ "IN23": {
+  "rows": [
+   {
+    "segment": "Strategic distributors",
+    "parents": 30,
+    "platform_fee": 600000,
+    "units_per_parent": 1200000,
+    "net_unit_price": 2.5,
+    "revenue_per_parent": 3600000.0,
+    "modeled_revenue_m": 108.0
+   },
+   {
+    "segment": "Mid-market distributors",
+    "parents": 96,
+    "platform_fee": 150000,
+    "units_per_parent": 200000,
+    "net_unit_price": 3.0,
+    "revenue_per_parent": 750000.0,
+    "modeled_revenue_m": 72.0
+   },
+   {
+    "segment": "SMB distributors",
+    "parents": 745,
+    "platform_fee": 25000,
+    "units_per_parent": 20000,
+    "net_unit_price": 3.5,
+    "revenue_per_parent": 95000.0,
+    "modeled_revenue_m": 70.8
+   },
+   {
+    "segment": "Rep agencies",
+    "parents": 1200,
+    "platform_fee": 10000,
+    "units_per_parent": 8000,
+    "net_unit_price": 4.0,
+    "revenue_per_parent": 42000.0,
+    "modeled_revenue_m": 50.4
+   }
+  ],
+  "serviceable_total_m": 301.2,
+  "expansion_scenario_m": 180.0,
+  "unit": "accepted RFQ draft"
+ },
+ "IN24": {
+  "unit": "$M annual, US eligible buyers",
+  "steps": [
+   {
+    "label": "Relevant task labor cost",
+    "value": 4000,
+    "type": "total"
+   },
+   {
+    "label": "Technical coverage (60%)",
+    "value": -1600,
+    "type": "delta"
+   },
+   {
+    "label": "Realization (70%)",
+    "value": -720,
+    "type": "delta"
+   },
+   {
+    "label": "Customer benefit",
+    "value": 1680,
+    "type": "total"
+   },
+   {
+    "label": "Retained by customer",
+    "value": -1380,
+    "type": "delta"
+   },
+   {
+    "label": "Vendor revenue scenario",
+    "value": 300,
+    "type": "total"
+   }
+  ],
+  "capture_pct": 17.9
+ },
+ "IN25": [
+  {
+   "workflow": "Current wedge: RFQ \u2192 quote",
+   "buyer": "Quoting team",
+   "unit": "Accepted RFQ draft",
+   "dependency": "Live product",
+   "increment_m": 300.0,
+   "readiness": "Pricing proof needed"
+  },
+  {
+   "workflow": "Inbox triage & routing",
+   "buyer": "Inside sales / CSR",
+   "unit": "Routed request",
+   "dependency": "Agent intake GA",
+   "increment_m": 120.0,
+   "readiness": "Design partner"
+  },
+  {
+   "workflow": "Post-award submittals & orders",
+   "buyer": "Project coordinators",
+   "unit": "Accepted submittal / PO",
+   "dependency": "Order integration",
+   "increment_m": 60.0,
+   "readiness": "Roadmap"
+  },
+  {
+   "workflow": "Marketplace (separate engine)",
+   "buyer": "Manufacturers",
+   "unit": "Placement / intelligence",
+   "dependency": "Data rights",
+   "increment_m": null,
+   "readiness": "Never summed"
+  }
+ ],
+ "IN26": {
+  "pilot": {
+   "offer": "Proposed pilot package",
+   "base_commitment": 60000,
+   "included_units": 10000,
+   "unit": "accepted RFQ draft",
+   "overage_price": 3.0,
+   "refund_rule": "Rejected or reopened drafts are not billed",
+   "term": "12 months"
+  },
+  "existing_meters": [
+   {
+    "meter": "CPQ credit",
+    "billable_event": "Quote / submittal generated",
+    "status": "Existing contracts"
+   },
+   {
+    "meter": "MAP project-month (D1)",
+    "billable_event": "Active project-month",
+    "status": "Existing contracts"
+   }
+  ]
+ },
+ "IN27": {
+  "per_accepted_output": {
+   "customer_benefit": 18.0,
+   "net_price": 3.0,
+   "full_cost": 1.2
+  },
+  "gp": 1.8,
+  "gm_pct": 60.0,
+  "customer_retained": 15.0,
+  "value_capture_pct": 16.7,
+  "table": {
+   "review_minutes": 4.1,
+   "acceptance_rate_pct": 91.0,
+   "earned_revenue_k": 30.0,
+   "accepted_outputs": 10000,
+   "period": "Q1 FY28 (illustrative)"
+  }
+ },
+ "IN28": {
+  "waterfall_k": [
+   {
+    "label": "Earned revenue",
+    "value": 900
+   },
+   {
+    "label": "Inference",
+    "value": -90
+   },
+   {
+    "label": "Tools & data",
+    "value": -45
+   },
+   {
+    "label": "Hosting",
+    "value": -36
+   },
+   {
+    "label": "Human QA & rework",
+    "value": -108
+   },
+   {
+    "label": "Support & implementation",
+    "value": -81
+   },
+   {
+    "label": "Other delivery",
+    "value": -18
+   },
+   {
+    "label": "Gross profit",
+    "value": 522
+   }
+  ],
+  "gm_pct": 58.0,
+  "payback": {
+   "deploy_cost_k": 1200,
+   "monthly_gp_k": [
+    0,
+    20,
+    45,
+    70,
+    90,
+    105,
+    115,
+    125,
+    130,
+    135,
+    140,
+    145,
+    150,
+    150,
+    155
+   ],
+   "cumulative_gp_k": [
+    0,
+    20,
+    65,
+    135,
+    225,
+    330,
+    445,
+    570,
+    700,
+    835,
+    975,
+    1120,
+    1270,
+    1420,
+    1575
+   ],
+   "payback_month": 13
+  }
+ },
+ "IN29": [
+  {
+   "cohort": "Q1 FY26",
+   "signed": 6,
+   "paid": 5,
+   "live": 4,
+   "renewed": 4,
+   "impl_days_median": 75,
+   "custom_hours": 120
+  },
+  {
+   "cohort": "Q2 FY26",
+   "signed": 8,
+   "paid": 7,
+   "live": 6,
+   "renewed": null,
+   "impl_days_median": 60,
+   "custom_hours": 90
+  },
+  {
+   "cohort": "Q3 FY26",
+   "signed": 10,
+   "paid": 9,
+   "live": 7,
+   "renewed": null,
+   "impl_days_median": 45,
+   "custom_hours": 60
+  }
+ ],
+ "IN30": [
+  {
+   "context": "Historical quotes & BOMs",
+   "right": "Customer-permissioned",
+   "eval": "Held-out 500 RFQs",
+   "baseline_pct": 78.0,
+   "with_context_pct": 91.0
+  },
+  {
+   "context": "Manufacturer catalogs",
+   "right": "Licensed",
+   "eval": "Held-out 500 RFQs",
+   "baseline_pct": 71.0,
+   "with_context_pct": 86.0
+  },
+  {
+   "context": "Customer price books",
+   "right": "Customer-permissioned",
+   "eval": "Pricing match, 300 lines",
+   "baseline_pct": 64.0,
+   "with_context_pct": 88.0
+  },
+  {
+   "context": "ERP orders & inventory",
+   "right": "Integration contract",
+   "eval": "Availability check, 200 orders",
+   "baseline_pct": 55.0,
+   "with_context_pct": 83.0
+  }
+ ],
+ "IN31": [
+  {
+   "release": "R1",
+   "accepted_no_review_pct": 10,
+   "accepted_with_review_pct": 55,
+   "failed_pct": 35,
+   "review_min_per_output": 9.0,
+   "full_cost_per_output": 2.1,
+   "eligible": 1200,
+   "attempted": 1100,
+   "accepted": 715
+  },
+  {
+   "release": "R2",
+   "accepted_no_review_pct": 18,
+   "accepted_with_review_pct": 60,
+   "failed_pct": 22,
+   "review_min_per_output": 7.2,
+   "full_cost_per_output": 1.7,
+   "eligible": 1500,
+   "attempted": 1450,
+   "accepted": 1131
+  },
+  {
+   "release": "R3",
+   "accepted_no_review_pct": 30,
+   "accepted_with_review_pct": 56,
+   "failed_pct": 14,
+   "review_min_per_output": 5.5,
+   "full_cost_per_output": 1.4,
+   "eligible": 1800,
+   "attempted": 1760,
+   "accepted": 1514
+  },
+  {
+   "release": "R4",
+   "accepted_no_review_pct": 41,
+   "accepted_with_review_pct": 50,
+   "failed_pct": 9,
+   "review_min_per_output": 4.1,
+   "full_cost_per_output": 1.2,
+   "eligible": 2100,
+   "attempted": 2080,
+   "accepted": 1893
+  }
+ ]
+}

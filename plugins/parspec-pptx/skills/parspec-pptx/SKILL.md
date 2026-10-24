@@ -1,7 +1,7 @@
 ---
 name: parspec-pptx
 description: "Generate Parspec-branded editable .pptx decks via python-pptx, reading the design-model.yaml SSoT. Two registers: (1) house — builds on a company deck used as a template (logo, footer, page numbers, layout backgrounds; 10in canvas). Profiles: investor (opt-in proposed, native charts and finance tables), sales (opt-in proposed, pending ratification), master (default; the Sept-2026 master deck — black + warm glow, ALL-CAPS titles with an orange phrase, numbered cards, panel rows, problem→solution rows, umber funnels, CAD brackets) and townhall (Q2-26 town hall — left-bar cards, KPI tiles, chevrons, section strips). (2) brand_artifacts — 13.333in canvas, drawn chrome, L1–L12 for standalone board memos. Headless LibreOffice render + PNG verify loop (PowerPoint optional). Use when the deliverable must open or be edited in PowerPoint, Keynote or Google Slides — all-hands / town hall sections, CEO and fundraising updates, sales decks, board decks. Triggers: 'parspec pptx', 'parspec powerpoint', 'board deck for parspec', 'town hall slides', 'all-hands deck', 'use our new deck format', '/parspec-pptx', 'editable pptx with parspec brand'."
-version: 0.5.0
+version: 0.6.0
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion]
 ---
 
@@ -94,6 +94,18 @@ value. Peer deltas use the unrounded median. Valuation / ARR uses pre-money
 equity value throughout. Runway and retention are fixture assertions, not
 independently verified model outputs. Sources and definitions stay in BD-12 /
 IN-12. Main text is at least 14px; BD-12 and IN-09 permit 13px; copyright is 11px.
+
+### Series B story extension (v0.6.0)
+
+Read `references/story-archetypes.md` for IN-20 through IN-31 and their plain
+input schemas. `assets/story.py` provides twelve generic builders and the
+incubation divider/chip. `scripts/story_gallery.py` builds thirteen local slides
+from the packaged, explicitly fictional incubation fixture and generic product
+placeholders. `scripts/story_draft.py --content /local/private/input.json`
+reads confidential content only from the supplied local path, uses the external
+partner label by default and keeps all economics visibly illustrative. Never
+stage the local `seriesb_story` directory or `real_content` inputs. Check saved
+decks with `investor_smoke.py --data fixtures/incubation_fixture.json --story ...`.
 
 ### House templates (company-internal — never commit them)
 

@@ -20,3 +20,7 @@ node_modules/
 # Decks and company templates never belong in this public repo
 *.pptx
 *.key
+
+# Confidential story build inputs and outputs
+seriesb_story/
+real_content*.json
