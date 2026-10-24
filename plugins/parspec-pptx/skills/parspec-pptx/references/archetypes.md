@@ -16,8 +16,9 @@ completed gallery coverage.
 
 **Use:** open a customer presentation with one subject and clear ownership.
 
-**Primitive:** `m.cover_lockup(...)` plus `m.quarter_arcs(...)`; profile `cover()`
-provides the standard two-line title construction.
+**Primitive:** `m.cover_lockup(...)` includes the native quarter-disc/arcs;
+profile `cover()` provides the standard two-line title construction. Call
+`m.quarter_arcs(...)` separately only when composing another archetype, such as S10.
 
 **Density:** two title lines, one lockup and at most two metadata lines. No page
 number; no content cards or proof-stat strip.

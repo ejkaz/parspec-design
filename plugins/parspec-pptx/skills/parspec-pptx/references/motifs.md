@@ -18,7 +18,7 @@ coordinates, rather than CSS pixels at 96 DPI. Use the named primitives in
 |---|---|---|
 | One idea per slide | Use a direct, mixed-case takeaway title where supported; preserve setup labels where the approved copy calls for them. Split when the content needs smaller text. | S04–S09, S11–S15 |
 | Ground | Use `sales_ground_master` throughout a sales deck. Existing investor and exhibit profiles keep their own surfaces. | S01–S15 |
-| Header | Orange bold uppercase section eyebrow near y=40; mixed-case bold title below; optional muted dek. No tracking and no rule beneath the eyebrow. Content starts at y=184. | S04–S09, S11–S15 |
+| Header | Orange bold uppercase section eyebrow near y=40; mixed-case bold title below; optional muted dek. No tracking and no rule beneath the eyebrow. Use the dek only with a single-line title; a two-line title occupies that vertical space. Content starts at y=184. | S04–S09, S11–S15 |
 | Grid | Side inset 56px; width 1168px; gutter and normal card padding 24px. Align card tops, text starts and footer edges. | S02, S04–S15 |
 | Type | Cover/divider 60px; content title 42px; card headings 22–24px; preferred body 18px; meaningful text at least 14px. Only footnotes/footer may use 11px. | S01–S15 |
 | Card | Square `sales_card`, one flush 4px orange top rule. No automatic outline or internal hairline. Use `sales_card_raised` only when hierarchy calls for it. | S04, S07, S09, S12, S14 |

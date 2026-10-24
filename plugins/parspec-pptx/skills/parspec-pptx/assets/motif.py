@@ -52,11 +52,12 @@ class Motif:
         spec = self.types[kind]
         if bold is None:
             bold = spec['weight'] >= 600
+        native_font = spec.get('font_face', spec['family']) if not bold else spec['family']
         points = (size if size is not None else spec['size_px']) * 72 / self.ppi
         box = sh.text(slide, *[self.inch(v) for v in (x, y, w, h)], text,
                        size=points,
                        color=self.color(color) if isinstance(color, str) else color,
-                       bold=bold, font=self.font, align=align, anchor=anchor,
+                       bold=bold, font=native_font, align=align, anchor=anchor,
                        italic=italic)
         # Exact point leading preserves CSS em spacing in PowerPoint, whose
         # proportional leading otherwise also includes intrinsic font leading.

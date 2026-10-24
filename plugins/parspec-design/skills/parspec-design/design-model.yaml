@@ -926,21 +926,23 @@ sales_register:
     delta: {family: "{tokens.typography.family}", size_px: 14, weight: 400, line_height: 1.2, letter_spacing: 0, transform: none}
     chart_unit: {family: "{tokens.typography.family}", size_px: 14, weight: 700, line_height: 1.2, letter_spacing: 0, transform: uppercase}
     agenda_item: {family: "{tokens.typography.family}", size_px: 24, weight: 400, line_height: 1.2, letter_spacing: 0, transform: none}
-    agenda_heading: {family: "{tokens.typography.family}", size_px: 44, weight: 300, line_height: 1.05, letter_spacing: 0, transform: uppercase}
+    agenda_heading: {family: "{tokens.typography.family}", font_face: "{sales_register.native_font_faces.light}", size_px: 44, weight: 300, line_height: 1.05, letter_spacing: 0, transform: uppercase}
     numeral: {family: "{tokens.typography.family}", size_px: 32, weight: 700, line_height: 1.0, letter_spacing: 0, transform: none}
     stat: {family: "{tokens.typography.family}", size_px: 64, weight: 700, line_height: 1.0, letter_spacing: 0, transform: none}
     kpi: {family: "{tokens.typography.family}", size_px: 40, weight: 700, line_height: 1.0, letter_spacing: 0, transform: none}
     footnote: {family: "{tokens.typography.family}", size_px: 11, weight: 400, line_height: 1.2, letter_spacing: 0, transform: none}
     footer: {family: "{tokens.typography.family}", size_px: 11, weight: 400, line_height: 1.2, letter_spacing: 0, transform: none}
-    agenda_display: {family: "{tokens.typography.family}", size_px: 44, weight: 300, line_height: 1.05, letter_spacing: 0, transform: uppercase}
+    agenda_display: {family: "{tokens.typography.family}", font_face: "{sales_register.native_font_faces.light}", size_px: 44, weight: 300, line_height: 1.05, letter_spacing: 0, transform: uppercase}
     chart_total: {family: "{tokens.typography.family}", size_px: 56, weight: 700, line_height: 1.0, letter_spacing: 0, transform: none}
-    small_numeral: {family: "{tokens.typography.family}", size_px: 28, weight: 300, line_height: 1.0, letter_spacing: 0, transform: none}
+    small_numeral: {family: "{tokens.typography.family}", font_face: "{sales_register.native_font_faces.light}", size_px: 28, weight: 300, line_height: 1.0, letter_spacing: 0, transform: none}
     chart_detail: {family: "{tokens.typography.family}", size_px: 15, weight: 400, line_height: 1.4, letter_spacing: 0, transform: none}
     contact_name: {family: "{tokens.typography.family}", size_px: 22, weight: 700, line_height: 1.2, letter_spacing: 0, transform: none}
     contact_detail: {family: "{tokens.typography.family}", size_px: 15, weight: 400, line_height: 1.4, letter_spacing: 0, transform: none}
     table_header: {family: "{tokens.typography.family}", size_px: 16, weight: 700, line_height: 1.2, letter_spacing: 0, transform: uppercase}
     table_price: {family: "{tokens.typography.family}", size_px: 20, weight: 700, line_height: 1.2, letter_spacing: 0, transform: none}
     cover_subtitle: {family: "{tokens.typography.family}", size_px: 22, weight: 600, line_height: 1.35, letter_spacing: 0, transform: none}
+  native_font_faces:
+    light: "Montserrat Light"
   minimum_meaningful_text_px: 14
   small_text_exceptions: [footer, footnote]
   highlight_scale:

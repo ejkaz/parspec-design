@@ -79,6 +79,10 @@ def primitive_contract(b):
     run = title.text_frame.paragraphs[0].runs[0]
     require(math.isclose(run.font.size.pt, 42 * 72 / 128, abs_tol=.01), "42px did not become 23.625pt")
     require(run.font.name == b.font, "title family does not come from brand")
+    light = motif.text(slide, 56, 150, 400, 60, "Agenda", style="agenda_display")
+    require(light.text_frame.paragraphs[0].runs[0].font.name == b.sales["native_font_faces"]["light"], "light token compiled as regular")
+    bold = motif.text(slide, 56, 220, 100, 50, "FF", style="small_numeral", bold=True)
+    require(bold.text_frame.paragraphs[0].runs[0].font.name == b.font, "bold override inherited light face")
     items = [{"label": str(i), "value": n} for i, n in enumerate([30, 18, 7, 6, 4], 1)]
     n_before = len(slide.shapes)
     try:
