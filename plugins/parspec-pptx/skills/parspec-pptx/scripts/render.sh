@@ -55,7 +55,11 @@ if [[ "$ENGINE" == "soffice" ]]; then
         && ! { command -v fc-list >/dev/null && fc-list | grep -qi montserrat; }; then
         echo "render.sh: WARNING Montserrat not installed — render will substitute a wider font" >&2
     fi
-    soffice --headless --convert-to pdf --outdir "$OUT_DIR" "$PPTX_ABS" >/dev/null 2>&1 \
+    SOFFICE_ARGS=(soffice)
+    if [[ -n "${SOFFICE_PROFILE:-}" ]]; then
+        SOFFICE_ARGS+=("-env:UserInstallation=${SOFFICE_PROFILE}")
+    fi
+    "${SOFFICE_ARGS[@]}" --headless --convert-to pdf --outdir "$OUT_DIR" "$PPTX_ABS" >/dev/null 2>&1 \
         || { echo "render.sh: soffice conversion failed" >&2; exit 2; }
     [[ -f "$PDF" ]] || { echo "render.sh: PDF not written" >&2; exit 2; }
 # ── direct mode: foreground osascript ─────────────────────────────────

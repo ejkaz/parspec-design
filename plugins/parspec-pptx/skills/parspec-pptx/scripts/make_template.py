@@ -3,6 +3,7 @@ Build a local house template from a company deck export.
 
     python3 make_template.py --profile master "<master deck export>.pptx"
     python3 make_template.py --profile townhall "Parspec Townhall - Q2.26.pptx"
+    python3 make_template.py --profile sales --logo "<logo.png>" "<sales master>.pptx"
     [--out PATH] [--master N]
 
 Strips every slide and every master except the one that carries the
@@ -24,7 +25,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pptx import Presentation  # noqa: E402
 
-from assets.house import DEFAULT_PROFILE, PROFILES, pick_master, strip_to_template  # noqa: E402
+from assets.house import DEFAULT_PROFILE, PROFILES, pick_master, strip_to_template, prepare_sales_template  # noqa: E402
+from assets.brand import load as load_brand  # noqa: E402
 
 
 def main():
@@ -33,6 +35,7 @@ def main():
     ap.add_argument("--profile", default=DEFAULT_PROFILE, choices=sorted(PROFILES))
     ap.add_argument("--out")
     ap.add_argument("--master", type=int)
+    ap.add_argument("--logo", help="Real logo image for the local sales master (never committed)")
     a = ap.parse_args()
     prof = PROFILES[a.profile]
 
@@ -44,6 +47,8 @@ def main():
                  f"--master N and update PROFILES['{a.profile}'].layouts")
     n_slides, n_masters = len(prs.slides), len(prs.slide_masters)
     strip_to_template(prs, keep_master=idx)
+    if a.profile == "sales":
+        prepare_sales_template(prs, load_brand(), logo=a.logo)
     out = Path(a.out or prof.template).expanduser()
     out.parent.mkdir(parents=True, exist_ok=True)
     prs.save(out)

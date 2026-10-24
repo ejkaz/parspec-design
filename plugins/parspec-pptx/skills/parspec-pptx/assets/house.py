@@ -7,6 +7,8 @@ into company decks with zero drift. 10 x 5.625 in canvas — the Google Slides
 default, so files round-trip through Slides cleanly.
 
 Profiles
+    sales     proposed sales register: black, bold mixed-case titles, top-rule
+              cards, native editable chart/process/table motifs. Opt-in only.
     master    the Sept-2026 company master deck ("Parspec Overview"):
               pure black, warm glow layouts, ALL-CAPS light titles with an accent
               phrase, numbered cards, panel rows, umber layer fills.  DEFAULT.
@@ -36,6 +38,7 @@ from pathlib import Path
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE, PP_PLACEHOLDER
 from pptx.oxml.ns import qn
+from pptx.shapes.shapetree import SlideShapes
 from pptx.util import Inches
 
 from . import shapes as sh
@@ -44,6 +47,9 @@ from .shapes import Palette
 
 TEMPLATE_DIR = Path.home() / "Documents/Claude/Templates"
 W, H = 10.0, 5.625
+_SALES = load_brand().sales
+_SALES_GRID = _SALES["geometry"]
+_SALES_PPI = _SALES_GRID["px_per_in"]
 
 
 @dataclass(frozen=True)
@@ -60,13 +66,28 @@ class Profile:
     top: float = 1.42              # content band
     bottom: float = 4.95
     notes: dict = field(default_factory=dict)
+    master_anchor: str | None = None
 
     @property
     def required(self):
-        return set(self.layouts.values())
+        return set(self.layouts.values()) | ({self.master_anchor} if self.master_anchor else set())
 
 
 PROFILES = {
+    "sales": Profile(
+        name="sales",
+        template=TEMPLATE_DIR / "parspec_sales_template.pptx",
+        env="PARSPEC_PPTX_SALES_TEMPLATE",
+        layouts={kind: "TITLE_ONLY_1_1" for kind in ("cover", "divider", "content", "plain", "blank")},
+        master_anchor="CUSTOM_6_2",
+        title_size=_SALES["type"]["title"]["size_px"] * 72 / _SALES_PPI,
+        title_bold=True, title_caps=False,
+        x0=_SALES_GRID["inset_px"] / _SALES_PPI,
+        xw=_SALES_GRID["width_px"] / _SALES_PPI,
+        top=_SALES_GRID["content_top_px"] / _SALES_PPI,
+        bottom=_SALES_GRID["table_bottom_px"] / _SALES_PPI,
+        notes={"status": "proposed", "default": False},
+    ),
     "master": Profile(
         name="master",
         template=TEMPLATE_DIR / "parspec_master_template.pptx",
@@ -137,6 +158,40 @@ def pick_master(prs: Presentation, profile: Profile) -> int | None:
     return None
 
 
+def prepare_sales_template(prs: Presentation, brand: Brand, logo: str | Path | None = None):
+    """Normalize only the local sales master; retain its original image if omitted.
+
+    The logo is an actual supplied raster asset, never reconstructed text. No
+    proprietary master, image or render is packaged with this public plugin.
+    """
+    master = prs.slide_masters[0]
+    pictures = [p for p in master.shapes if p.shape_type == 13]
+    blob = Path(logo).read_bytes() if logo else max(pictures, key=lambda p: p.image.size[0]).image.blob
+    for item in list(master.shapes):
+        master.shapes._spTree.remove(item._element)
+    g = brand.sales["geometry"]
+    scale = g["px_per_in"]
+    # python-pptx exposes read-only MasterShapes; the editable shape tree uses
+    # the same XML and master-part relationships as a regular slide.
+    editable = SlideShapes(master._element.spTree, master)
+    image = editable.add_picture(io.BytesIO(blob), Inches(g["inset_px"] / scale),
+                                     Inches((g["footer_zone_top_px"] + 15) / scale),
+                                     width=Inches(g["footer_logo_width_px"] / scale))
+    image.name = "sales-footer-real-logo"
+    # Use the same resolved font and px scale as the sales primitives.
+    spec = brand.sales_type("footer")
+    footer = editable.add_textbox(Inches(200 / scale), Inches((g["footer_zone_top_px"] + 15) / scale),
+                                  Inches(880 / scale), Inches(22 / scale))
+    sh.text(master, 200 / scale, (g["footer_zone_top_px"] + 15) / scale,
+            880 / scale, 22 / scale,
+            "©2026 Parspec Inc. All rights reserved. Proprietary and confidential.",
+            size=spec["size_px"] * 72 / scale, font=brand.font,
+            color=brand.role("sales_muted"), align="c", target=footer)
+    master.background.fill.solid()
+    master.background.fill.fore_color.rgb = brand.role("sales_ground_master")
+    return prs
+
+
 class HouseDeck:
     """Deck builder bound to a house template profile and the brand palette."""
 
@@ -152,6 +207,14 @@ class HouseDeck:
                 raise ValueError(f"no master in template has {sorted(self.p.required)}")
             strip_to_template(self.prs, keep_master=idx)
         self.x0, self.xw, self.top, self.bottom = self.p.x0, self.p.xw, self.p.top, self.p.bottom
+        if profile == "sales":
+            prepare_sales_template(self.prs, self.brand)
+            g = self.brand.sales["geometry"]
+            k = g["px_per_in"]
+            self.x0, self.xw = g["inset_px"] / k, g["width_px"] / k
+            self.top, self.bottom = g["content_top_px"] / k, g["table_bottom_px"] / k
+            from .motif import Motif
+            self.motif = Motif(self)
 
     # ── plumbing ─────────────────────────────────────────────────────
     @property
@@ -170,8 +233,15 @@ class HouseDeck:
         lay = self.layout(kind)
         s = self.prs.slides.add_slide(lay)
         for ph in list(s.placeholders):
-            if ph.placeholder_format.idx not in keep:
+            if self.p.name == "sales" or ph.placeholder_format.idx not in keep:
                 ph._element.getparent().remove(ph._element)
+        if self.p.name == "sales":
+            s.background.fill.solid()
+            s.background.fill.fore_color.rgb = self.brand.role("sales_ground_master")
+            if kind != "cover":
+                self.motif.text(s, 1132, 686, 92, 22, str(len(self.prs.slides)),
+                                style="footer", color="ink_muted", align="r")
+            return s
         # add_slide never copies the slide-number field; glow layouts lack one entirely
         src = [ph for ph in lay.placeholders
                if ph.placeholder_format.type == PP_PLACEHOLDER.SLIDE_NUMBER] or \
@@ -218,10 +288,15 @@ class HouseDeck:
 
     # ── chrome ───────────────────────────────────────────────────────
     def eyebrow(self, s, label: str):
+        if self.p.name == "sales":
+            return self.motif.text(s, 56, 40, 1168, 24, label.upper(), style="eyebrow", color="orange")
         sh.label(s, self.x0, 0.26, 4.0, label, self.pal)
 
     def title(self, s, text: str, accent: str | None = None, *, top=None):
         """Title placeholder; `accent` is an optional trailing phrase in brand orange."""
+        if self.p.name == "sales":
+            return self.motif.text(s, 56, 70 if top is None else top * 128, 1168, 104,
+                                   text + (" " + accent if accent else ""), style="title")
         ph = s.shapes.title
         self.place(ph, x=0.34, y=top if top is not None else (0.49 if self.p.title_caps else 0.36),
                    w=9.32, h=0.63)
@@ -234,6 +309,9 @@ class HouseDeck:
         tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = Inches(0.1)
 
     def subtitle(self, s, text: str, y=None):
+        if self.p.name == "sales":
+            return self.motif.text(s, 56, 128 if y is None else y * 128, 1168, 40,
+                                   text, style="subtitle", color="ink_muted")
         y = y if y is not None else (1.04 if self.p.title_caps else 0.98)
         sh.text(s, self.x0, y, self.xw, 0.26, text, size=11, color=self.pal.muted)
 
@@ -246,6 +324,10 @@ class HouseDeck:
         caps eyebrow + 24pt bold mixed-case title on the plain cover layout, as in
         its 'Parspec at a Glance' slides and CEO outline decks built from them.
         """
+        if self.p.name == "sales":
+            s = self.slide("content", keep=())
+            self.motif.header(s, eyebrow or "", title, subtitle or "")
+            return s
         if style == "eyebrow" and self.p.name == "master":
             s = self.slide("cover", keep=())
             if eyebrow:
@@ -266,8 +348,12 @@ class HouseDeck:
         return s
 
     def cover(self, title_lines, subtitle: str = "", byline="", *, date="",
-              byline_label="Presented by", eyebrow: str | None = None):
+              byline_label="Presented by", eyebrow: str | None = None, customer=""):
         """byline / date: str or runs (use self.placeholder('[Date]') for unknowns)."""
+        if self.p.name == "sales":
+            s = self.slide("cover", keep=())
+            self.motif.cover_lockup(s, customer, title_lines, subtitle=subtitle, date=date, byline=byline)
+            return s
         if self.p.name == "townhall":
             return self._cover_townhall(title_lines, subtitle, byline, date, eyebrow)
         pal = self.pal
@@ -315,7 +401,7 @@ class HouseDeck:
         return s
 
     def divider(self, heading: str, minutes: str | None = None, *, accent=None, kicker=None,
-                strip=None, active=None, tagline: str | None = None, footnote=None, size=None):
+                strip=None, active=None, tagline: str | None = None, footnote=None, size=None, glow=None):
         """Section divider.
 
         master: glow layout, 33pt caps heading (+ accent phrase), optional kicker
@@ -323,6 +409,13 @@ class HouseDeck:
         townhall: logo, arcs, big heading, optional numbered strip.
         """
         pal = self.pal
+        if self.p.name == "sales":
+            s = self.slide("divider", keep=())
+            if glow is None:
+                local_glow = Path(os.environ.get("PARSPEC_PPTX_SALES_GLOW") or TEMPLATE_DIR / "parspec_sales_glow.png")
+                glow = local_glow if local_glow.exists() else None
+            self.motif.divider(s, heading, sections=tagline or "", glow=glow)
+            return s
         if self.p.name == "master":
             s = self.slide("divider")
             ph = s.shapes.title
@@ -369,6 +462,20 @@ class HouseDeck:
         highlight: index of the row that should read as the climax (master: accent title).
         """
         pal = self.pal
+        if self.p.name == "sales":
+            s = self.slide("plain", keep=())
+            self.motif.text(s, 56, 291, 380, 56, heading[0], style="agenda_display", align="r")
+            self.motif.text(s, 56, 339, 380, 56, heading[1], style="agenda_display", color="orange", align="r")
+            self.motif.text(s, 56, 415, 380, 28, blurb, style="label", color="ink_muted", align="r")
+            self.motif.rect(s, 468, 120, 1, 480, fill="hairline")
+            for i, (title, descriptor, minutes) in enumerate(items):
+                y = 150 + i * 84
+                self.motif.text(s, 516, y, 48, 84, f"{i+1:02d}", style="card_heading", color="orange", anchor="m")
+                self.motif.text(s, 588, y, 540, 84, title, style="agenda_item", anchor="m")
+                self.motif.text(s, 1152, y, 72, 84, minutes, style="label", color="ink_muted", align="r", anchor="m")
+                if i < len(items) - 1:
+                    self.motif.rect(s, 516, y + 83, 708, 1, fill="hairline")
+            return s
         if self.p.name == "master":
             s = self.slide("plain", keep=())
             sh.text(s, 0.45, 1.9, 2.6, 1.2, list(heading), size=30, font="Montserrat Light",
