@@ -47,8 +47,21 @@ def _slide(deck, sid, title, subtitle='', incubation=False, notes=''):
 
 
 def _table(deck, s, headers, rows, *, x=56, y=232, w=1168, h=400, widths=None, numeric_cols=(), font_px=18):
-    return deck.charts.fin_table(s, headers, rows, x=x, y=y, w=w, h=h,
-                                widths=widths, numeric_cols=numeric_cols, font_px=font_px)
+    table = deck.charts.fin_table(s, headers, rows, x=x, y=y, w=w, h=h,
+                                  widths=widths, numeric_cols=numeric_cols, font_px=font_px)
+    # The shared table builder compensates proportional digits with character
+    # spacing. LibreOffice renders its narrow "1" as a broken number ("1 08").
+    # Keep native right alignment and one untracked, editable numeric run.
+    for row in list(table.table.rows)[1:]:
+        for col in numeric_cols:
+            for paragraph in row.cells[col].text_frame.paragraphs:
+                runs=list(paragraph.runs)
+                if not runs: continue
+                value=''.join(run.text for run in runs)
+                runs[0].text=value
+                runs[0]._r.get_or_add_rPr().set('spc','0')
+                for run in runs[1:]:paragraph._p.remove(run._r)
+    return table
 
 
 def _connector(deck, s, x1,y1,x2,y2, *, arrow=True, name='workflow:connector'):
@@ -140,7 +153,7 @@ def reachable_revenue(deck, data):
     s=_slide(deck,'IN-23',f'${number(total)}M annual vendor revenue scenario','Annual US$M. Separate serviceable and expansion cases.',True)
     rows=[[r['segment'],str(r['parents']),number(r['units_per_parent'],0), '$'+number(r['net_unit_price'],2),'$'+number(r['platform_fee'],0),number(v)] for r,v in zip(data['rows'],totals)]
     rows.append(['Total','','','','',number(total)])
-    _table(deck,s,['Segment','Eligible\nparents','Units /\nparent / yr','Net $ /\nunit','Platform\n$ / yr','Revenue\n$M / yr'],rows,w=700,h=386,widths=[.28,.12,.16,.14,.16,.14],numeric_cols=[1,2,3,4,5],font_px=14)
+    _table(deck,s,['Segment','Eligible\nparents','Units /\nparent / yr','Net $ /\nunit','Platform\n$ / yr','Revenue\n$M / yr'],rows,w=700,h=386,widths=[.28,.12,.16,.14,.16,.14],numeric_cols=[1,2,3,4,5],font_px=16)
     _columns(deck,s,['Serviceable\ncase','Expansion\nscenario'],[dict(name='Annual revenue',values=[float(total),data['expansion_scenario_m']])],x=780,y=218,w=444,h=370,name='reachable_revenue')
     point=s.shapes[-1].chart.series[0].points[1]
     point.format.fill.solid();point.format.fill.fore_color.rgb=deck.investor.color('chart_4')
@@ -242,7 +255,7 @@ def deployment_cohorts(deck, data):
 
 def context_evidence(deck, data):
     s=_slide(deck,'IN-30','Permissioned context and held-out evaluations','Each result needs a defined metric, access right and reproducible comparison.',True)
-    _table(deck,s,['Context / integration','Right / access','Evaluation','Baseline','With context'],[[r['context'],r['right'],r['eval'],number(r['baseline_pct'])+'%',number(r['with_context_pct'])+'%'] for r in data],h=390,widths=[.25,.24,.27,.12,.12],numeric_cols=[3,4],font_px=20)
+    _table(deck,s,['Context / integration','Right / access','Evaluation','Baseline','With context'],[[r['context'],r['right'],r['eval'],number(r['baseline_pct'])+'%',number(r['with_context_pct'])+'%'] for r in data],h=390,widths=[.25,.27,.24,.12,.12],numeric_cols=[3,4],font_px=20)
     return s
 
 

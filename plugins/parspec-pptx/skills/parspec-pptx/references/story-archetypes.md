@@ -84,3 +84,8 @@ The smoke check independently recomputes operands, waterfalls and first crossing
 compares chart caches with embedded workbooks, enforces native chart counts,
 100% outcomes and text floors, and rejects targeted corruptions. Visual review
 and PowerPoint/Slides round-trip fidelity remain separate checks.
+
+Numeric story-table cells retain native right alignment and one untracked run.
+The shared table helper's per-digit width compensation rendered narrow digits
+as broken numbers in LibreOffice (for example 108.0 appeared as 1 08.0). The
+story wrapper removes that compensation without changing the other galleries.

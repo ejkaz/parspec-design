@@ -62,6 +62,14 @@ def check_slide(slide,sid,d):
         require(len(slide._element.xpath('.//p:cxnSp'))>=2,'IN20: connectors')
     if sid=='IN-21':
         require(len(slide._element.xpath('.//p:cxnSp'))>=2,'IN21: connectors')
+    if sid in ('IN-23','IN-29','IN-30','IN-31'):
+        for shape in slide.shapes:
+            if shape.has_table:
+                for row in shape.table.rows:
+                    for cell in row.cells:
+                        for p in cell.text_frame.paragraphs:
+                            for run in p.runs:
+                                require(not run._r.xpath('./a:rPr[@spc>0]'),sid+': tracked numeric glyphs can split numbers')
     if sid=='IN-23':
         rows=d['IN23']['rows'];total=sum(D(r['parents'])*(D(str(r['platform_fee']))+D(r['units_per_parent'])*D(str(r['net_unit_price']))) for r in rows)/1000000
         require(total.quantize(D('.1'))==D('301.2'),'IN23: operand total')
@@ -138,6 +146,11 @@ def probes(prs,d):
     def small(s):
         shape=next(s for s in s.shapes if s.has_text_frame and s.text==CHIP);shape.text_frame.paragraphs[0].runs[0].font.size=Pt(5)
     reject('IN-23','font floor',small)
+    def tracked(s):
+        table=next(sh.table for sh in s.shapes if sh.has_table)
+        run=table.cell(1,1).text_frame.paragraphs[0].runs[0]
+        run._r.get_or_add_rPr().set('spc','200')
+    reject('IN-23','tracked digits break numeric legibility',tracked)
     def stacked(s):
         ch=next(s.chart for s in s.shapes if s.has_chart);g=ch._chartSpace.xpath('.//c:barChart/c:grouping')[0];old=g.get('val');g.set('val','stacked')
         return lambda:g.set('val',old)
