@@ -53,7 +53,9 @@ class Motif:
         if bold is None:
             bold = spec['weight'] >= 600
         native_font = spec.get('font_face', spec['family']) if not bold else spec['family']
-        points = (size if size is not None else spec['size_px']) * 72 / self.ppi
+        # DrawingML stores font sizes in hundredths of a point. Round upward so
+        # a source minimum (14px = 7.875pt) cannot serialize below its floor.
+        points = math.ceil((size if size is not None else spec['size_px']) * 72 / self.ppi * 100) / 100
         box = sh.text(slide, *[self.inch(v) for v in (x, y, w, h)], text,
                        size=points,
                        color=self.color(color) if isinstance(color, str) else color,
@@ -109,7 +111,7 @@ class Motif:
         """S04: compact label/value/caption tile; each metric can carry a marker."""
         p = self.geo['padding_px']
         self.top_rule_card(slide, x, y, w, h)
-        self.text(slide, x+p, y+p+4, w-2*p, 35, label.upper(), kind='label', color='accent')
+        self.text(slide, x+p, y+p+4, w-2*p, 24, label.upper(), kind='label', color='accent')
         self.text(slide, x+p, y+61, w-2*p, 83, str(value), kind='stat',
                   color='accent' if hero else 'text', line_spacing=1)
         if source:

@@ -36,7 +36,7 @@ def build(output: Path, template=None, glow=None):
         ("FOUNDED", "20XX", "Built by construction and software operators"),
         ("TEAM", "00", "Across engineering, data and customer success"),
         ("DISTRIBUTORS & REPS", "000+", "Branches and agencies live on the platform"),
-        ("QUOTED THROUGH PLATFORM", "$00B", "Cumulative project value quoted to date"),
+        ("QUOTED VALUE", "$00B", "Cumulative project value quoted to date"),
     ]
     for i, (label, value, caption) in enumerate(stats):
         m.stat_tile(s, 56 + i * 298, 184, 274, 236, label, value, caption, source="1", hero=i == 3)
@@ -94,7 +94,7 @@ def build(output: Path, template=None, glow=None):
         ["Annual price¹", "$24K", "$60K", "$150K"],
     ]
     m.highlight_table(s, ["", "PILOT", "TEAM", "ENTERPRISE"], rows, chosen=3,
-                      x=56, y=184, w=1168, row_h=68, widths=[400, 244, 244, 244])
+                      x=56, y=184, w=1168, row_h=68, widths=[224, 244, 284, 380])
     m.text(s, 56, 606, 1168, 22, "1. Sample pricing for layout review.", style="footnote", color="ink_muted")
     slides.append(s)
 
@@ -129,7 +129,7 @@ def build(output: Path, template=None, glow=None):
         m.text(s, 116, y + 36, 500, 28, f"{owner} · TBD", style="label", color="ink_muted")
     m.contact_ring(s, 696, 228, 104, "[Executive Name]", "[Title], Parspec", initials="EX")
     m.contact_ring(s, 696, 368, 104, "[Account Executive]", "Enterprise Account Executive, Parspec", initials="AE")
-    m.text(s, 696, 508, 480, 52, "Template-only contact and headshot placeholders", style="label", color="ink_muted")
+    m.text(s, 824, 442, 400, 20, "Template-only contact and headshot placeholders", style="label", color="ink_muted")
     m.quarter_arcs(s)
     slides.append(s)
     for i, s in enumerate(slides, 1):
