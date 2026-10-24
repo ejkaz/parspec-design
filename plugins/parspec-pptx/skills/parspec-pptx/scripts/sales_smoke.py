@@ -138,7 +138,7 @@ def gallery_contract(path, b):
                         for s in slide.shapes), f"S{i+1:02d} page footer")
     require("45 minutes" in texts[1] and texts[1].count("10 min") == 4 and "5 min" in texts[1], "agenda canonical timings")
     require(texts[2].count("02") == 1, "divider chapter duplicated")
-    require(all(x in texts[3] for x in ("2021", "97", "350+", "$35B", "Sample figures for layout review.")), "company sample copy")
+    require(all(x in texts[3] for x in ("20XX", "00", "000+", "$00B", "Sample figures for layout review.")), "company sample copy")
     require("+18%" not in texts[4] and "+1.2" not in texts[4] and "2×" not in texts[4], "rejected proof statistics reintroduced")
     require(sum(bool(s._element.xpath('.//a:prstGeom[@prst="blockArc"]')) for s in prs.slides[5].shapes) == 5,
             "S06 native segment editability")

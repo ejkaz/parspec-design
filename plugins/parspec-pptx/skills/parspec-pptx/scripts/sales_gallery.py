@@ -33,15 +33,15 @@ def build(output: Path, template=None, glow=None):
     s = deck.content("Parspec at a Glance", eyebrow="COMPANY OVERVIEW",
                      subtitle="AI-native procurement platform for electrical distributors and rep agencies.")
     stats = [
-        ("FOUNDED", "2021", "Built by construction and software operators"),
-        ("TEAM", "97", "Across engineering, data and customer success"),
-        ("DISTRIBUTORS & REPS", "350+", "Branches and agencies live on the platform"),
-        ("QUOTED THROUGH PLATFORM", "$35B", "Cumulative project value quoted to date"),
+        ("FOUNDED", "20XX", "Built by construction and software operators"),
+        ("TEAM", "00", "Across engineering, data and customer success"),
+        ("DISTRIBUTORS & REPS", "000+", "Branches and agencies live on the platform"),
+        ("QUOTED THROUGH PLATFORM", "$00B", "Cumulative project value quoted to date"),
     ]
     for i, (label, value, caption) in enumerate(stats):
         m.stat_tile(s, 56 + i * 298, 184, 274, 236, label, value, caption, source="1", hero=i == 3)
     m.callout_bar(s, 56, 448, 1168, 96,
-                  "Quotes, submittals and orders on one platform, live today at 350+ distributors and rep agencies.",
+                  "Quotes, submittals and orders on one platform, live today at 000+ distributors and rep agencies.",
                   label="WHY IT MATTERS FOR NORTHWIND")
     m.text(s, 56, 568, 1168, 24, "1. Sample figures for layout review.", style="footnote", color="ink_muted")
     slides.append(s)
@@ -127,7 +127,7 @@ def build(output: Path, template=None, glow=None):
         m.text(s, 56, y, 40, 34, f"{i+1:02d}", style="card_heading", color="orange")
         m.text(s, 116, y, 500, 32, title, style="body_strong")
         m.text(s, 116, y + 36, 500, 28, f"{owner} · TBD", style="label", color="ink_muted")
-    m.contact_ring(s, 696, 228, 104, "Forest Flager", "CEO & Founder, Parspec", initials="FF")
+    m.contact_ring(s, 696, 228, 104, "[Executive Name]", "[Title], Parspec", initials="EX")
     m.contact_ring(s, 696, 368, 104, "[Account Executive]", "Enterprise Account Executive, Parspec", initials="AE")
     m.text(s, 696, 508, 480, 52, "Template-only contact and headshot placeholders", style="label", color="ink_muted")
     m.quarter_arcs(s)
