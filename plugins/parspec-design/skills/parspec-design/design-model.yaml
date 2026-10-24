@@ -5,16 +5,23 @@
 # ════════════════════════════════════════════════════════════════════
 
 meta:
-  version: "2.2.0"
+  version: "2.3.0"
   brand_version: "2026-Q3-v1"
   source: "Parspec Brand v1 + BVIN slide 5 empirical evidence + 2-agent lock collaboration (Brand Marketer × Graphics Designer, May 2026) + Q1-26 Board Finance Appendix empirical convergence (June 2026)"
-  updated: "2026-09-16"
+  updated: "2026-10-23"
   updated_by: "eric@parspec.io"
-  status: "ratified"
+  status: "proposed"
   ratified: "2026-05-04"
   ratified_by: "eric@parspec.io"
-  supersedes: "2.1.0"
+  supersedes: "2.2.0"
   notes: |
+    v2.3.0 — Proposed sales register; additive and pending ratification.
+    Keeps brand_version and all existing roles, surfaces and invariants unchanged.
+    The opt-in sales profile records a pure-black ground, square top-rule cards,
+    untracked bold eyebrows, mixed-case titles and the proposed ownership fill.
+    Existing ratified fields document the prior brand decision, not approval
+    of this proposal. Default PPTX profile remains master.
+
     v2.2.0 — Umber layer ramp (ADDITIVE; brand_version unchanged). The Sept-2026
     company master deck ("Parspec Overview") ships a theme whose
     accents 3–5 are desaturated dark oranges (#5A3F1C / #392917 / #261E15) used
@@ -238,6 +245,17 @@ surfaces:
 # ────────────────────────────────────────────────────────────────────
 primitives:
   colors:
+    # Proposed sales-only additions. Existing ramps remain unchanged.
+    sales:
+      ground: "#000000"
+      band: "#262626"
+      row_alt: "#161616"
+      muted: "#BDBDBD"
+      footnote: "#8A8A8A"
+      chart_grey: "#8C8C8C"
+      chart_grey_deep: "#5C5C5C"
+      chart_grey_dark: "#3A3A3A"
+      status_good: "#4CB07A"
     neutral:
       0:   "#FFFFFF"  # White
       50:  "#FAFAFA"
@@ -354,6 +372,32 @@ primitives:
 # referencing the role token.
 # ────────────────────────────────────────────────────────────────────
 roles:
+  # Proposed, opt-in sales roles; do not replace the locked/global bindings.
+  sales_ground_master: "{sales.ground}"
+  sales_card: "{neutral.900}"
+  sales_card_raised: "{neutral.850}"
+  sales_band: "{sales.band}"
+  sales_row_alt: "{sales.row_alt}"
+  sales_accent: "{brand.500}"
+  sales_top_rule: "{brand.500}"
+  sales_text: "{neutral.0}"
+  sales_muted: "{sales.muted}"
+  sales_subtle: "{neutral.400}"
+  sales_footnote: "{sales.footnote}"
+  sales_line: "{neutral.800}"
+  sales_ownership_fill: "{brand.500}"
+  sales_ownership_text: "{sales.ground}"
+  sales_umber: "{umber.700}"
+  sales_umber_deep: "{umber.800}"
+  sales_chart_1: "{brand.500}"
+  sales_chart_2: "{teal.300}"
+  sales_chart_3: "{sales.chart_grey}"
+  sales_chart_4: "{sales.chart_grey_deep}"
+  sales_chart_5: "{sales.chart_grey_dark}"
+  sales_status_good: "{sales.status_good}"
+  sales_status_warn: "{amber.600}"
+  sales_status_bad: "{roles.status_error_on_dark}"
+
   # v2.0.0 — Refactored from 2-agent lock collaboration.
   # See Parspec_Brand_Evolution/Reviews/Lock_Final_Synthesis.md for decision log.
   # Naming convention: roles split by surface mode where the AA math diverges
@@ -808,3 +852,125 @@ invariants:
     rule: "family_exhibit (Source Serif 4) is permitted ONLY for exhibit/financial titles on the investor_exhibit surface. Never on dark brand_artifacts slides, never for body text, never for numerals (numbers stay Montserrat tabular)."
     rationale: "The serif is a narrow, deliberate signal of 'formal financials' — diluting it into body or onto brand decks erodes Montserrat's status as the single brand voice and reintroduces the Arial+Georgia drift the board decks fell into."
     severity: "warning"
+
+
+# Proposed sales register — explicitly selected by HouseDeck(profile="sales").
+# This records the candidate direction; it does not ratify or replace the
+# primary axis or grant a global orange-chart/ownership exemption.
+sales_register:
+  status: proposed
+  production_adoption: pending-ratification
+  default_profile: master
+  source: "Synthetic archetypes S01-S10; measured 1280x720 candidate geometry"
+  roles_scope: "sales_* only; existing global invariants remain unchanged"
+  colors:
+    ground_master: "{roles.sales_ground_master}"
+    card: "{roles.sales_card}"
+    card_raised: "{roles.sales_card_raised}"
+    band: "{roles.sales_band}"
+    row_alt: "{roles.sales_row_alt}"
+    accent: "{roles.sales_accent}"
+    top_rule: "{roles.sales_top_rule}"
+    text: "{roles.sales_text}"
+    muted: "{roles.sales_muted}"
+    subtle: "{roles.sales_subtle}"
+    footnote: "{roles.sales_footnote}"
+    line: "{roles.sales_line}"
+    ownership_fill: "{roles.sales_ownership_fill}"
+    ownership_text: "{roles.sales_ownership_text}"
+    umber: "{roles.sales_umber}"
+    umber_deep: "{roles.sales_umber_deep}"
+    chart_1: "{roles.sales_chart_1}"
+    chart_2: "{roles.sales_chart_2}"
+    chart_3: "{roles.sales_chart_3}"
+    chart_4: "{roles.sales_chart_4}"
+    chart_5: "{roles.sales_chart_5}"
+    status_good: "{roles.sales_status_good}"
+    status_warn: "{roles.sales_status_warn}"
+    status_bad: "{roles.sales_status_bad}"
+  geometry:
+    canvas_width_px: 1280
+    canvas_height_px: 720
+    px_per_in: 128
+    inset_px: 56
+    width_px: 1168
+    gutter_px: 24
+    padding_px: 24
+    content_top_px: 184
+    content_bottom_px: 636
+    table_bottom_px: 632
+    eyebrow_y_px: 40
+    title_y_px: 70
+    footer_y_px: 680
+    footer_zone_top_px: 672
+    footer_logo_width_px: 92
+    top_rule_px: 4
+    outline_px: 1
+    radius_px: 0
+    title_rule_width_px: 192
+    title_rule_px: 3
+  type:
+    eyebrow: {family: "{tokens.typography.family}", size_px: 18, weight: 700, line_height: 1.2, letter_spacing: 0, transform: uppercase}
+    title: {family: "{tokens.typography.family}", size_px: 42, weight: 700, line_height: 1.15, letter_spacing: 0, transform: mixed-case}
+    cover: {family: "{tokens.typography.family}", size_px: 60, weight: 700, line_height: 1.05, letter_spacing: 0, transform: mixed-case}
+    divider: {family: "{tokens.typography.family}", size_px: 60, weight: 700, line_height: 1.1, letter_spacing: 0, transform: mixed-case}
+    card_heading: {family: "{tokens.typography.family}", size_px: 22, weight: 700, line_height: 1.15, letter_spacing: 0, transform: mixed-case}
+    card_heading_large: {family: "{tokens.typography.family}", size_px: 24, weight: 700, line_height: 1.2, letter_spacing: 0, transform: mixed-case}
+    body: {family: "{tokens.typography.family}", size_px: 18, weight: 400, line_height: 1.45, letter_spacing: 0, transform: none}
+    body_strong: {family: "{tokens.typography.family}", size_px: 18, weight: 700, line_height: 1.4, letter_spacing: 0, transform: none}
+    subtitle: {family: "{tokens.typography.family}", size_px: 20, weight: 400, line_height: 1.35, letter_spacing: 0, transform: none}
+    label: {family: "{tokens.typography.family}", size_px: 14, weight: 700, line_height: 1.2, letter_spacing: 0, transform: uppercase}
+    small: {family: "{tokens.typography.family}", size_px: 14, weight: 400, line_height: 1.35, letter_spacing: 0, transform: none}
+    caption: {family: "{tokens.typography.family}", size_px: 16, weight: 400, line_height: 1.4, letter_spacing: 0, transform: none}
+    table: {family: "{tokens.typography.family}", size_px: 17, weight: 400, line_height: 1.25, letter_spacing: 0, transform: none}
+    delta: {family: "{tokens.typography.family}", size_px: 14, weight: 400, line_height: 1.2, letter_spacing: 0, transform: none}
+    chart_unit: {family: "{tokens.typography.family}", size_px: 14, weight: 700, line_height: 1.2, letter_spacing: 0, transform: uppercase}
+    agenda_item: {family: "{tokens.typography.family}", size_px: 24, weight: 400, line_height: 1.2, letter_spacing: 0, transform: none}
+    agenda_heading: {family: "{tokens.typography.family}", size_px: 44, weight: 300, line_height: 1.05, letter_spacing: 0, transform: uppercase}
+    numeral: {family: "{tokens.typography.family}", size_px: 32, weight: 700, line_height: 1.0, letter_spacing: 0, transform: none}
+    stat: {family: "{tokens.typography.family}", size_px: 64, weight: 700, line_height: 1.0, letter_spacing: 0, transform: none}
+    kpi: {family: "{tokens.typography.family}", size_px: 40, weight: 700, line_height: 1.0, letter_spacing: 0, transform: none}
+    footnote: {family: "{tokens.typography.family}", size_px: 11, weight: 400, line_height: 1.2, letter_spacing: 0, transform: none}
+    footer: {family: "{tokens.typography.family}", size_px: 11, weight: 400, line_height: 1.2, letter_spacing: 0, transform: none}
+    agenda_display: {family: "{tokens.typography.family}", size_px: 44, weight: 300, line_height: 1.05, letter_spacing: 0, transform: uppercase}
+    chart_total: {family: "{tokens.typography.family}", size_px: 56, weight: 700, line_height: 1.0, letter_spacing: 0, transform: none}
+    small_numeral: {family: "{tokens.typography.family}", size_px: 28, weight: 300, line_height: 1.0, letter_spacing: 0, transform: none}
+    chart_detail: {family: "{tokens.typography.family}", size_px: 15, weight: 400, line_height: 1.4, letter_spacing: 0, transform: none}
+    contact_name: {family: "{tokens.typography.family}", size_px: 22, weight: 700, line_height: 1.2, letter_spacing: 0, transform: none}
+    contact_detail: {family: "{tokens.typography.family}", size_px: 15, weight: 400, line_height: 1.4, letter_spacing: 0, transform: none}
+    table_header: {family: "{tokens.typography.family}", size_px: 16, weight: 700, line_height: 1.2, letter_spacing: 0, transform: uppercase}
+    table_price: {family: "{tokens.typography.family}", size_px: 20, weight: 700, line_height: 1.2, letter_spacing: 0, transform: none}
+    cover_subtitle: {family: "{tokens.typography.family}", size_px: 22, weight: 600, line_height: 1.35, letter_spacing: 0, transform: none}
+  minimum_meaningful_text_px: 14
+  small_text_exceptions: [footer, footnote]
+  highlight_scale:
+    - {level: 1, treatment: bold-white, use: supporting-result}
+    - {level: 2, treatment: orange-text, use: single-hero-value}
+    - {level: 3, treatment: orange-outline-1px, use: chosen-column-or-destination}
+    - {level: 4, treatment: ownership-fill-black-text, use: Parspec-or-target}
+  ownership_fill:
+    fill: "{roles.sales_ownership_fill}"
+    text: "{roles.sales_ownership_text}"
+    status: proposed-requires-ratification
+    meaning: "Parspec-owned / the target, never warning status"
+  umber:
+    fill: "{roles.sales_umber}"
+    border: none
+    meaning: "Ask, decision, third-party or context"
+    quarter_disc_fill: "{roles.sales_umber_deep}"
+  motif_budget:
+    max_chrome_devices: 3
+    count: "Repeated instances count as one framing family; mandatory footer excluded"
+    brackets: "Only S05 three-value cards or S13 stat quad; never universal"
+    arcs: "Only S01 cover and S10 close"
+    glow: "Only S03 divider; original local image asset"
+  chart:
+    palette: ["{roles.sales_chart_1}", "{roles.sales_chart_2}", "{roles.sales_chart_3}", "{roles.sales_chart_4}", "{roles.sales_chart_5}"]
+    data_label_colors: ["{roles.sales_ownership_text}", "{roles.sales_ownership_text}", "{roles.sales_ownership_text}", "{roles.sales_text}", "{roles.sales_text}"]
+    use: "S06 native donut only; no global palette change"
+    plan_line: dashed
+  not_current:
+    paper_warm_panel: "not in current sales register (0/290 slides)"
+    serif_exhibit_surface: "not in current sales register (0/290 slides)"
+    universal_brackets: "not in current sales register (0/290 slides)"
+    interpretation: "Zero universal bracket usage; selective bracket examples remain valid. Existing paper/serif tokens are preserved for other registers."

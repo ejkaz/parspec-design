@@ -1,13 +1,35 @@
 ---
 name: parspec-design
 description: "Parspec brand SSoT and evolution workflow. Use when the user wants to inspect, update, evolve, or roll back the Parspec brand — colors, typography, motion, voice, or the design-model.yaml itself. Triggers include 'show parspec brand', 'update parspec brand', 'evolve parspec palette', 'parspec design model', 'roll back brand to <tag>', '/parspec-design'. The skill maintains design-model.yaml — the single file every other Parspec skill (parspec-slides, parspec-pptx, parspec-craft, parspec-review) reads."
-version: 0.2.0
+version: 0.3.0
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, WebFetch]
 ---
 
 # Parspec Design
 
 Brand SSoT skill. Owns `design-model.yaml` — the single file that defines Parspec's visual identity. Every other Parspec skill (parspec-slides, parspec-pptx, parspec-craft, parspec-review) reads this file. Brand changes happen here; downstream skills auto-adapt.
+
+## Proposed sales register (v2.3.0)
+
+Model 2.3.0 has `meta.status: proposed`, with `brand_version` unchanged.
+`sales_register` and `roles.sales_*` are additive, explicitly scoped tokens for
+`HouseDeck(profile="sales")` in parspec-pptx 0.4.0. They record measured black
+sales grounds, square top-rule cards, bold mixed-case titles, untracked bold
+eyebrows, a single umber ask-band fill, and a proposed ownership/highlight fill.
+The existing primary axis, surfaces, roles and invariants remain unchanged;
+`master` stays the default PPTX profile until ratification. Existing `ratified`
+metadata records the prior brand decision and does not approve this proposal.
+
+The proposed orange ownership and chart usage needs explicit ratification before
+production adoption. Do not treat the synthetic gallery as an approved template
+or change the global CTA invariant to make a candidate pass. The `not_current`
+annotations apply only to the sales register: paper-warm panels, serif exhibit
+surfaces and universal brackets are unobserved there (0/290 slides); selective
+card/stat-group brackets remain allowed. Existing exhibit definitions are kept.
+
+Sales composition guidance lives in the PPTX sibling
+`references/motifs.md` and `references/archetypes.md`. Templates and private
+reference artwork stay outside this public repository.
 
 ## Identity
 
@@ -30,6 +52,7 @@ Signature motifs: corner brackets (CAD viewfinder), quarter circles (the town ha
 
 | Block | Purpose |
 |---|---|
+| `sales_register` | Proposed opt-in sales geometry, typography, color mappings, highlight scale and scoped motif budget |
 | `meta` | Version frontmatter — `version`, `brand_version`, `source`, `updated_by`, `supersedes`, `notes` |
 | `primitives` | Raw color ramps (neutral 0–950, brand 50–950, semantic), spacing scale, radii |
 | `tokens` | Semantic mappings — light/dark color modes, typography scale, motion, hero stage, iconography |

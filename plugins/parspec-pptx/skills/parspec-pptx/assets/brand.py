@@ -176,6 +176,7 @@ class Brand:
     voice_avoid: list[str] = field(default_factory=list)
     avoid_fonts: list[str] = field(default_factory=list)
     raw: dict = field(default_factory=dict)
+    sales: dict = field(default_factory=dict)
 
     def __getattr__(self, name: str):
         # Accessor for ALIAS_MAP names (BLACK, BRAND_ORANGE, ...)
@@ -183,6 +184,10 @@ class Brand:
         if name in self.colors:
             return self.colors[name]
         raise AttributeError(name)
+
+    def sales_type(self, name: str) -> dict:
+        """Resolved type specification for the opt-in, proposed sales register."""
+        return self.sales["type"][name]
 
     # Role tokens — lookup by role name string
     def role(self, name: str) -> RGBColor:
@@ -224,6 +229,20 @@ def load(path: Path | None = None) -> Brand:
             )
         colors[py_name] = _hex_to_rgb(resolved)
 
+    # Sales roles are additive and opt-in: old profiles keep their bindings.
+    for role_key, raw_val in raw.get("roles", {}).items():
+        if role_key.startswith("sales_"):
+            colors[role_key] = _hex_to_rgb(_resolve(raw_val, raw))
+
+    def resolve_tree(value):
+        if isinstance(value, dict):
+            return {key: resolve_tree(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [resolve_tree(item) for item in value]
+        return _resolve(value, raw)
+
+    sales = resolve_tree(raw.get("sales_register", {}))
+
     # Backfill alias names → already-resolved role colors
     for alias, role_py in ALIAS_MAP.items():
         if role_py in colors:
@@ -243,6 +262,7 @@ def load(path: Path | None = None) -> Brand:
         voice_avoid=voice_avoid,
         avoid_fonts=avoid_fonts,
         raw=raw,
+        sales=sales,
     )
 
 
