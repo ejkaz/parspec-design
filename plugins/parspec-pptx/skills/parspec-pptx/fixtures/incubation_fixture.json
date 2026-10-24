@@ -52,12 +52,12 @@
     "type": "total"
    },
    {
-    "label": "Technical coverage (60%)",
+    "label": "Outside technical coverage (40%)",
     "value": -1600,
     "type": "delta"
    },
    {
-    "label": "Realization (70%)",
+    "label": "Unrealized benefit (30%)",
     "value": -720,
     "type": "delta"
    },
@@ -77,11 +77,13 @@
     "type": "total"
    }
   ],
-  "capture_pct": 17.9
+  "capture_pct": 17.9,
+  "coverage_applied": "60% retained: 4,000 → 2,400",
+  "realization_applied": "70% realized: 2,400 → 1,680"
  },
  "IN25": [
   {
-   "workflow": "Current wedge: RFQ \u2192 quote",
+   "workflow": "Current wedge: RFQ → quote",
    "buyer": "Quoting team",
    "unit": "Accepted RFQ draft",
    "dependency": "Live product",
@@ -126,12 +128,12 @@
   "existing_meters": [
    {
     "meter": "CPQ credit",
-    "billable_event": "Quote / submittal generated",
+    "billable_event": "Committed credits billed in advance; documents consume credits",
     "status": "Existing contracts"
    },
    {
     "meter": "MAP project-month (D1)",
-    "billable_event": "Active project-month",
+    "billable_event": "Committed D1 project-months billed in advance",
     "status": "Existing contracts"
    }
   ]
@@ -262,14 +264,14 @@
   {
    "context": "Historical quotes & BOMs",
    "right": "Customer-permissioned",
-   "eval": "Held-out 500 RFQs",
+   "eval": "500 RFQs; metric to be defined",
    "baseline_pct": 78.0,
    "with_context_pct": 91.0
   },
   {
    "context": "Manufacturer catalogs",
    "right": "Licensed",
-   "eval": "Held-out 500 RFQs",
+   "eval": "500 RFQs; metric to be defined",
    "baseline_pct": 71.0,
    "with_context_pct": 86.0
   },

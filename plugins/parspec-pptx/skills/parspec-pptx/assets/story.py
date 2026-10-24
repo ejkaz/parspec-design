@@ -13,7 +13,7 @@ from pptx.util import Inches
 
 ILLUSTRATIVE = 'ILLUSTRATIVE · DUMMY NUMBERS'
 DISCLAIMER = 'Illustrative — dummy numbers, not Parspec data'
-STATUSES = ('Live', 'Demo environment', 'Prototype', 'Roadmap')
+STATUSES = ('Live', 'Demo environment', 'Prototype', 'Roadmap', 'Design specified')
 
 
 def number(value, places=1):
@@ -40,6 +40,12 @@ def _slide(deck, sid, title, subtitle='', incubation=False, notes=''):
         middle=min(range(1,len(words)),key=lambda j:abs(len(' '.join(words[:j]))-len(title)/2))
         title=' '.join(words[:middle])+'\n'+' '.join(words[middle:])
     i.header(s, sid + (' · INCUBATION' if incubation and sid!='INCUBATION' else ''), title, subtitle)
+    # Story decks use the stricter 14px floor, including complete footers.
+    for shape in s.shapes:
+        if shape.has_text_frame and shape.top/914400*i.ppi>=680:
+            for paragraph in shape.text_frame.paragraphs:
+                paragraph.line_spacing=deck.charts.pt(14*1.18)
+                for run in paragraph.runs:run.font.size=deck.charts.pt(14)
     if incubation:
         illustrative_chip(deck, s)
     deck.notes(s, f'Slide: {sid}\n' + (DISCLAIMER+'\n' if incubation else '') + notes)
@@ -77,7 +83,7 @@ def _status(deck,s,x,y,w,label):
     if label not in STATUSES:
         raise ValueError('unsupported capability status: '+label)
     deck.investor.rect(s,x,y,w,30,fill='band',line='line')
-    deck.investor.text(s,x+8,y+5,w-16,24,label,size=14,bold=True,align='c')
+    return deck.investor.text(s,x+8,y+5,w-16,24,label,size=14,bold=True,align='c')
 
 
 def _columns(deck,s,categories,values, *,x,y,w,h,name,maximum=None,percent=False):
@@ -92,7 +98,7 @@ def _columns(deck,s,categories,values, *,x,y,w,h,name,maximum=None,percent=False
 
 
 def incubation_divider(deck, data=None):
-    s=_slide(deck,'INCUBATION','Incubation · Economics we will prove',incubation=True)
+    s=_slide(deck,'INCUBATION','Incubation · Evidence needed\nto test the economics','Independent illustrative examples, not a connected financial model',incubation=True)
     lines=[
         'D01  Approved market scope, source version and eligible buyers',
         'D02 + D05  Matched earned revenue and full delivery cost, tied to books',
@@ -108,37 +114,88 @@ def incubation_divider(deck, data=None):
 def wedge_workflow(deck, data):
     s=_slide(deck,'IN-20',data.get('title','The paid wedge and the next supervised workflow'),data.get('subtitle','Generic placeholder scope. Replace with a dated product inventory.'),notes=data.get('notes',''))
     columns=data['columns']
-    rows=[[label]+[c[key] for c in columns] for label,key in [('Buyer / job','buyer_job'),('Status','status'),('Reusable context','context'),('Next dependency','dependency')]]
+    fields=[('Buyer / job','buyer_job'),('Status','status'),('Reusable context','context')]
+    if data.get('show_dependencies',True):fields.append(('Next dependency','dependency'))
+    rows=[[label]+[c[key] for c in columns] for label,key in fields]
     _table(deck,s,['Workflow']+[c['name'] for c in columns],rows,h=390,widths=[.16]+[.84/len(columns)]*len(columns),font_px=18)
     for j in range(len(columns)-1):
         boundary=56+1168*.16+(j+1)*1168*.84/len(columns)
-        _connector(deck,s,boundary-64,271,boundary-24,271)
+        _connector(deck,s,boundary-64,232+390/(len(rows)+1)/2,boundary-24,232+390/(len(rows)+1)/2)
+    if data.get('next_validation'):deck.investor.text(s,56,638,1168,28,data['next_validation'],size=18,color='muted')
     return s
 
 
 def agent_swimlanes(deck, data):
     s=_slide(deck,'IN-21',data.get('title','Agent preparation and human controls'),data.get('subtitle','Generic placeholder flow with explicit capability stages.'),notes=data.get('notes',''))
     i=deck.investor
-    for label,key,yy,height in [('TRIGGER','triggers',226,82),('AGENT STEPS','agent_steps',320,176),('HUMAN CONTROLS','human_controls',508,122)]:
-        items=data[key];cols=min(3,len(items));cw=940/cols
-        row_count=(len(items)+cols-1)//cols;rh=height/row_count
-        i.text(s,56,yy+8,190,44,label,size=18,bold=True,color='muted')
-        i.rule(s,56,yy+height,1168)
+    def node(item,idx,x,y,w=280,h=40,status_y=None):
+        box=i.text(s,x,y,w,h,item['text'],size=14,bold=True);box.name=f'flow:step-{idx}'
+        if item.get('status'):
+            chip=_status(deck,s,x,status_y if status_y is not None else y+h+4,min(w,220),item['status'])
+            chip.name=f'flow:status-{idx}'
+    i.text(s,56,220,190,50,'TRIGGER',size=18,bold=True,color='muted')
+    if data.get('intake_options'):
+        i.text(s,266,190,500,24,data['intake_options_label'],size=16,bold=True)
+        for j,label in enumerate(data['intake_options']):
+            yy=220+j*30
+            i.text(s,266,yy,390,26,label,size=16)
+            _connector(deck,s,670,yy+10,770,256,name=f'intake:alternative-{j}')
+        i.text(s,800,232,400,58,data['intake_node'],size=18,bold=True)
+        _connector(deck,s,1000,290,1000,310,arrow=False,name='intake:feed')
+        _connector(deck,s,1000,310,406,310,arrow=False,name='intake:feed')
+        _connector(deck,s,406,310,406,330,name='intake:feed')
+    else:
+        items=data['triggers'];cw=940/len(items)
         for j,item in enumerate(items):
-            x=266+(j%cols)*cw;iy=yy+(j//cols)*rh
-            has_status=bool(item.get('status'))
-            i.text(s,x,iy,cw-28,min(rh-32,64) if has_status else rh-2,item['text'],size=14 if len(items)>3 else 18,bold=True)
-            if has_status: _status(deck,s,x,iy+min(rh-33,62),min(cw-28,220),item['status'])
-            if j%cols<cols-1: _connector(deck,s,x+cw-25,iy+20,x+cw-5,iy+20)
-    _connector(deck,s,1208,308,1208,320)
-    _connector(deck,s,1208,496,1208,508)
+            xx=266+j*cw
+            node(item,'trigger-'+str(j),xx,220,cw-30,40,status_y=264)
+            center=xx+(cw-30)/2
+            _connector(deck,s,center,297,center,310,arrow=False,name='intake:alternative-'+str(j))
+            _connector(deck,s,center,310,406,310,arrow=False,name='intake:merge')
+        _connector(deck,s,406,310,406,330,name='intake:feed')
+    i.rule(s,56,318,1168)
+    i.text(s,56,338,190,44,'AGENT STEPS',size=18,bold=True,color='muted')
+    steps=data['agent_steps'];routes=data.get('routes',[])
+    primary=list(range(3)) if routes else list(range(len(steps)))
+    cw=940/len(primary)
+    for j,idx in enumerate(primary):
+        xx=266+j*cw;node(steps[idx],idx,xx,332,cw-32,38,status_y=374)
+        if j<len(primary)-1:_connector(deck,s,xx+cw-26,350,xx+cw-5,350,name='agent:primary')
+    if routes:
+        # Classification feeds alternative routes. The project route alone has
+        # an internal sequence; there is no project-to-stock connector.
+        for j,route in enumerate(routes):
+            start=266 if j==0 else 894
+            i.text(s,start,418,570 if j==0 else 280,22,route['label'],size=14,bold=True,color='muted')
+            for k,idx in enumerate(route['steps']):
+                xx=start+k*314;node(steps[idx],idx,xx,444,280,36,status_y=484)
+                if k<len(route['steps'])-1:_connector(deck,s,xx+286,462,xx+308,462,name='agent:route-sequence')
+            if j==0:
+                _connector(deck,s,1034,405,1034,412,arrow=False,name='route:'+route['label'])
+                _connector(deck,s,1034,412,250,412,arrow=False,name='route:'+route['label'])
+                _connector(deck,s,250,412,250,462,arrow=False,name='route:'+route['label'])
+                _connector(deck,s,250,462,264,462,name='route:'+route['label'])
+            else:
+                _connector(deck,s,1034,405,1220,405,arrow=False,name='route:'+route['label'])
+                _connector(deck,s,1220,405,1220,462,arrow=False,name='route:'+route['label'])
+                _connector(deck,s,1220,462,1176,462,name='route:'+route['label'])
+    i.rule(s,56,526,1168)
+    i.text(s,56,540,190,72,data.get('human_lane_label','HUMAN CONTROLS'),size=18,bold=True,color='muted')
+    controls=data['human_controls'];cols=min(3,len(controls));cw=940/cols
+    for j,item in enumerate(controls):
+        xx=266+(j%cols)*cw;yy=540+(j//cols)*46
+        node(item,'control-'+str(j),xx,yy,cw-30,42,status_y=592)
+    # Non-directional associations identify control scope, never a control
+    # chronology. Nothing sends before verification as a diagram consequence.
+    for j in range(cols):_connector(deck,s,266+j*cw,528,266+j*cw,536,arrow=False,name='control:association')
+    i.rule(s,56,632,1168)
     i.text(s,56,642,1168,28,data.get('audit_path','Audit output: task ID, attempts, approvals and exception log'),size=16,color='muted')
     return s
 
 
 def learning_ledger(deck, data):
     s=_slide(deck,'IN-22',data.get('title','Design-partner reviews shape the workflow'),data.get('subtitle',data.get('partner_label','[Design partner]')),notes=data.get('notes',''))
-    _table(deck,s,['Customer request','Product response / spec','Observed status','Next test'],[[r[k] for k in ('request','response','status','next_test')] for r in data['rows']],h=330,widths=[.24,.29,.19,.28],font_px=16)
+    _table(deck,s,['Customer request','Product response / spec','Observed status',data.get('next_test_heading','Next test')],[[r[k] for k in ('request','response','status','next_test')] for r in data['rows']],h=330,widths=[.24,.29,.19,.28],font_px=16)
     stages=data['chronology'];cw=1168/len(stages)
     for j,stage in enumerate(stages):
         deck.investor.rect(s,56+j*cw,572,cw-4,94,fill='band')
@@ -177,7 +234,7 @@ def labor_waterfall(deck, data):
     s=_slide(deck,'IN-24','Labor wallet and vendor revenue scenario',data['unit'],True)
     _waterfall(deck,s,[r['label'].replace(' ','\n',1) for r in data['steps']],[r['value'] for r in data['steps']],total_indices=[j for j,r in enumerate(data['steps']) if r['type']=='total'],x=56,y=220,w=1168,h=260,font_px=16,number_format='0',label_above=True)
     _table(deck,s,['Factor','Applied once','Evidence'],[
-        ['Technical coverage',data['steps'][1]['label'],'Dummy assumption'],['Benefit realization',data['steps'][2]['label'],'Dummy assumption'],['Vendor capture',number(data['steps'][-1]['value']/data['steps'][3]['value']*100)+'% of benefit','Dummy scenario']],y=522,h=136,widths=[.32,.38,.30],font_px=16)
+        ['Technical coverage',data['coverage_applied'],'Dummy assumption'],['Benefit realization',data['realization_applied'],'Dummy assumption'],['Vendor capture',number(data['steps'][-1]['value']/data['steps'][3]['value']*100)+'% of benefit','Dummy scenario']],y=522,h=136,widths=[.32,.38,.30],font_px=16)
     return s
 
 
@@ -196,14 +253,14 @@ def pilot_package(deck, data):
     s=_slide(deck,'IN-26','Proposed pilot package: commitment plus accepted work','Commercial terms are hypothetical. Existing meters remain distinct.',True)
     rows=[['Pilot / quoting team',p['unit'],number(p['included_units'],0)+' included',f"${number(p['base_commitment'],0)} / {p['term']}",f"${number(p['overage_price'],2)} overage. "+p['refund_rule'],'Proposed']]
     for r in data['existing_meters']: rows.append([r['meter'],r['billable_event'],'Per contract','Per contract','Per contract',r['status']])
-    _table(deck,s,['Buyer / job','Billable event','Included volume','Price basis','Overage / refund','Status'],rows,h=370,widths=[.18,.18,.13,.15,.23,.13],font_px=18)
-    deck.investor.text(s,56,620,1168,44,'Acceptance, duplicate and reopen rules must prevent double billing.',size=20,color='muted')
+    _table(deck,s,['Buyer / job','Meter / billing basis','Included volume','Price basis','Overage / refund','Status'],rows,h=380,widths=[.16,.26,.12,.14,.21,.11],font_px=16)
+    deck.investor.text(s,56,620,1168,44,'Acceptance and reopen rules must prevent double billing.',size=20,color='muted')
     return s
 
 
 def output_economics(deck, data):
     p=data['per_accepted_output'];t=data['table']
-    s=_slide(deck,'IN-27','Value, price and full cost per accepted output','US$ / accepted output. Benefit and price overlap economically.',True)
+    s=_slide(deck,'IN-27','Value, price and full cost per accepted output','US$ / accepted output · independent of the pilot-package example',True)
     scale=max(1,math.ceil(max(p.values())*1.1))
     chart=_columns(deck,s,['Customer\nbenefit','Allocated\nnet price','Full delivery\ncost'],[dict(name='US$ / accepted output',values=[p[k] for k in ('customer_benefit','net_price','full_cost')])],x=56,y=214,w=760,h=310,name='output_economics',maximum=scale)
     area=chart.chart._chartSpace.chart.plotArea
@@ -226,11 +283,11 @@ def delivery_payback(deck, data):
     steps=data['waterfall_k'];p=data['payback'];running=0;cumulative=[]
     for v in p['monthly_gp_k']: running+=v;cumulative.append(running)
     month=next((j+1 for j,v in enumerate(cumulative) if v>=p['deploy_cost_k']),None)
-    s=_slide(deck,'IN-28',f'${number(sum(r["value"] for r in steps[:-1]),0)}K gross profit after delivery costs','US$K. Cohort period: UNKNOWN. Illustrative months since go-live.',True)
+    s=_slide(deck,'IN-28',f'${number(sum(r["value"] for r in steps[:-1]),0)}K gross profit after delivery costs','US$K · waterfall period not specified · payback is a separate illustration',True)
     labels=['Earned\nrevenue','Inference','Tools /\ndata','Hosting','Human QA /\nrework','Support /\nimpl.','Other\ndelivery','Gross\nprofit']
     _waterfall(deck,s,labels,[r['value'] for r in steps],x=56,y=244,w=710,h=342,font_px=14,number_format='0',label_above=True)
     deck.investor.text(s,800,204,424,40,'CUMULATIVE GP AND DEPLOYMENT COST',size=16,bold=True)
-    chart=deck.charts.line_trend(s,[str(j+1) for j in range(len(cumulative))],[dict(name='Cumulative GP',values=cumulative,color='chart_2'),dict(name='Acquisition / deployment cost',values=[p['deploy_cost_k']]*len(cumulative),color='muted')],x=800,y=248,w=424,h=300,font_px=14,number_format='0',legend=False)
+    chart=deck.charts.line_trend(s,[str(j+1) for j in range(len(cumulative))],[dict(name='Cumulative GP',values=cumulative,color='chart_2'),dict(name='Deployment cost',values=[p['deploy_cost_k']]*len(cumulative),color='muted')],x=800,y=248,w=424,h=300,font_px=14,number_format='0',legend=False)
     chart.chart.plots[0].has_data_labels=False
     # Series-level defaults must also be explicit: importers otherwise label
     # every point when the single native payback label is added below.
@@ -248,14 +305,14 @@ def delivery_payback(deck, data):
 
 
 def deployment_cohorts(deck, data):
-    s=_slide(deck,'IN-29','Paid and live deployment cohorts','All signed customers remain in the denominator. Unmatured renewals are unknown.',True)
-    _table(deck,s,['Fiscal cohort','Signed','Paid','Live','Renewed','Implementation\nmedian days','Custom\nhours'],[[r['cohort'],str(r['signed']),str(r['paid']),str(r['live']),'UNKNOWN' if r['renewed'] is None else str(r['renewed']),str(r['impl_days_median']),str(r['custom_hours'])] for r in data],h=350,widths=[.21,.09,.09,.09,.16,.19,.17],numeric_cols=[1,2,3,4,5,6],font_px=18)
+    s=_slide(deck,'IN-29','Paid and live deployment cohorts','All signed customers are shown. Later-cohort renewal status was not provided.',True)
+    _table(deck,s,['Fiscal cohort','Signed','Paid','Live','Renewed','Implementation\nmedian days','Custom\nhours'],[[r['cohort'],str(r['signed']),str(r['paid']),str(r['live']),'Not provided' if r['renewed'] is None else str(r['renewed']),str(r['impl_days_median']),str(r['custom_hours'])] for r in data],h=350,widths=[.21,.09,.09,.09,.16,.19,.17],numeric_cols=[1,2,3,4,5,6],font_px=18)
     return s
 
 
 def context_evidence(deck, data):
-    s=_slide(deck,'IN-30','Permissioned context and held-out evaluations','Each result needs a defined metric, access right and reproducible comparison.',True)
-    _table(deck,s,['Context / integration','Right / access','Evaluation','Baseline','With context'],[[r['context'],r['right'],r['eval'],number(r['baseline_pct'])+'%',number(r['with_context_pct'])+'%'] for r in data],h=390,widths=[.25,.27,.24,.12,.12],numeric_cols=[3,4],font_px=20)
+    s=_slide(deck,'IN-30','Permissioned context and held-out evaluations','Illustrative rates; success definitions and evaluation rules remain to be specified',True)
+    _table(deck,s,['Context / integration','Right / access','Evaluation','Baseline rate','With-context rate'],[[r['context'],r['right'],r['eval'],number(r['baseline_pct'])+'%',number(r['with_context_pct'])+'%'] for r in data],h=390,widths=[.25,.27,.24,.12,.12],numeric_cols=[3,4],font_px=20)
     return s
 
 

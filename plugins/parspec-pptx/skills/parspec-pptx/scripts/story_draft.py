@@ -22,7 +22,7 @@ def normalize_content(source):
             words=r['title'].split();middle=min(range(1,len(words)),key=lambda j:abs(len(' '.join(words[:j]))-len(r['title'])/2))
             r['title']=' '.join(words[:middle])+'\n'+' '.join(words[middle:])
         r['subtitle']=r.get('subtitle',r.get('dek',source.get('as_of','')))
-        r['notes']='\n'.join(r.get('source_notes',[]))+'\n'+source.get('confidentiality','')
+        r['notes']='\n'.join(r.get('source_notes',[]))+'\n'+source.get('confidentiality','')+'\nAs of '+source.get('as_of','')
         if sid=='IN20' and 'stages' in r:
             r['columns']=[dict(name=v['stage'],buyer_job=v['buyer_job'],status=v['status']+'\n'+v.get('as_of',''),context=v['reusable_from_wedge'],dependency=v.get('dependency','UNKNOWN: scope / buyer budget')) for v in r['stages']]
         if sid=='IN21' and 'lanes' in r:
@@ -31,7 +31,7 @@ def normalize_content(source):
             r['agent_steps']=[dict(text=v.get('text',v.get('step')),status=v['status']) for v in lanes['agent_steps']]
             r['human_controls']=[dict(text=v.get('text',v.get('control'))) for v in lanes['human_controls']]
             r['notes']+='\n'+r.get('status_legend','')+'\n'+'\n'.join(v.get('why','') for v in lanes['human_controls'])
-            r['audit_path']='Audit / approval ledger: UNKNOWN · Production step acceptance: UNKNOWN'
+            r['audit_path']=r.get('audit_path','')
         if sid=='IN22':
             r['rows']=[dict(request=v['request'],response=v.get('response',v.get('product_response')),status=v.get('status',v.get('observed_status')),next_test=v['next_test']) for v in r['rows']]
             chronology=r['chronology']

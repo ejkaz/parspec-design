@@ -25,7 +25,7 @@ content, proprietary templates, decks or renders belong in this public repo.
 `illustrative_chip()` adds the exact top-right dummy-data chip and replaces
 only the center footer. IN-23 through IN-31 and the divider always carry it.
 IN-20 through IN-22 do not. The gallery's first three pages are placeholders.
-Status chips accept only Live, Demo environment, Prototype or Roadmap.
+Status chips accept Live, Demo environment, Prototype, Roadmap or Design specified.
 
 ## Build locally
 
@@ -56,7 +56,8 @@ inference:
   `partner_label_internal`, and `IN20`, `IN21`, `IN22` (or a `slides` mapping).
 - Each slide: `headline`/`title`, optional `dek`/`subtitle`, `source_notes`.
 - IN20: `stages[]` with `stage`, `buyer_job`, `status`, `as_of`,
-  `reusable_from_wedge`, optional `dependency`. Missing dependency stays UNKNOWN.
+  `reusable_from_wedge`, optional `dependency`. Preserve missing source values in
+  authoring notes; real slides can omit the dependency row and show a validation agenda.
 - IN21: `lanes.trigger[]` strings, `lanes.agent_steps[]` with `step` and
   `status`, `lanes.human_controls[]` with `control` and `why`. Control rationale
   stays in notes. Controls without a supplied status receive no inferred chip.
@@ -76,7 +77,8 @@ serviceable headline. IN-24 holds annual US$ throughout. IN-27's benefit, price
 and cost overlap, so the columns are adjacent, never stacked. Retained benefit
 is before adoption cost. IN-28 includes all attempts and human delivery costs;
 its example payback uses months 1–15, first crossing in month 13. Missing cohort
-period, observation windows and defect rates remain UNKNOWN/TBD. The fixture
+period is explicitly not specified; observation windows and defect rates remain
+TBD, while missing renewal status is Not provided. The fixture
 has no evidence supporting these missing fields. No quote/BOM/MAP conversion is
 provided. Marketplace is separate and excluded from totals.
 
@@ -89,3 +91,24 @@ Numeric story-table cells retain native right alignment and one untracked run.
 The shared table helper's per-digit width compensation rendered narrow digits
 as broken numbers in LibreOffice (for example 108.0 appeared as 1 08.0). The
 story wrapper removes that compensation without changing the other galleries.
+
+## Story review fix rules
+
+Story decks use a 14px minimum for all text, including full footer disclosures;
+this stricter local floor does not change the shared brand footer token.
+Real-content authoring can set `show_dependencies: false` and `next_validation`
+on IN20, plus `human_lane_label`, `audit_path`, `intake_options_label`,
+`intake_options`, `intake_node`, and `routes` on IN21. Route records contain a
+plain label and zero-based indices into `agent_steps`. Alternatives feed the
+intake node; classification branches into routes. Human controls are independent
+associations, never a chronological send-before-review chain. `Design specified`
+is a supported status that asserts design documentation without execution.
+IN22 can supply `next_test_heading`; external partner labeling still comes from
+the local authoring JSON. Real wording and source limitations stay in that JSON.
+
+The divider identifies independent illustrations and evidence needed to test
+hypotheses. The package and accepted-output examples are not reconciled cases.
+Waterfall negative labels name the removed shares; retained factors stay in a
+separate table. Usage meters distinguish advance commitments from consumption.
+Missing renewal status is Not provided; missing success metrics remain undefined.
+No numeric fixture operand or fiscal period is invented by these repairs.

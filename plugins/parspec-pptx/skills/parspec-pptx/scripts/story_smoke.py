@@ -3,6 +3,7 @@ from copy import deepcopy
 from decimal import Decimal as D
 import hashlib
 import json
+import re
 from pathlib import Path
 from pptx import Presentation
 from pptx.oxml.ns import qn
@@ -40,8 +41,12 @@ def check_slide(slide,sid,d):
     t=text(slide);inc=sid not in ('IN-20','IN-21','IN-22')
     require(t.count(CHIP)==int(inc),sid+': illustrative boundary')
     require((FOOTER in t)==inc,sid+': incubation footer')
+    if not inc:
+        require(not re.search(r'\b(?:UNKNOWN|TBD)\b',t),sid+': raw machine placeholder on real-content slide')
+    footer_texts=[f.text for shape,f in frames(slide) if shape.top/914400*128>=680]
+    require(any((FOOTER if inc else '©2026 Parspec Inc. All rights reserved. Proprietary and confidential.')==value for value in footer_texts),sid+': complete footer')
     for shape,frame in frames(slide):
-        floor=11 if shape.top/914400*128>=680 else 14
+        floor=14
         for p in frame.paragraphs:
             for r in p.runs:
                 if not r.text:continue
@@ -58,10 +63,25 @@ def check_slide(slide,sid,d):
             require(float(axis.get('val'))==0,sid+': zero axis required')
         for sz in ch._chartSpace.xpath('.//a:rPr/@sz | .//a:defRPr/@sz'):
             require(float(sz)/100*128/72+.02>=14,sid+': chart text floor')
+    if sid=='INCUBATION':
+        require('Evidence needed to test the economics' in t.replace('\n',' '),'divider: test, not promised proof')
+        require('Independent illustrative examples, not a connected financial model' in t,'divider: independent examples')
     if sid=='IN-20':
         require(len(slide._element.xpath('.//p:cxnSp'))>=2,'IN20: connectors')
     if sid=='IN-21':
         require(len(slide._element.xpath('.//p:cxnSp'))>=2,'IN21: connectors')
+        require(not any(sh.name.startswith('control:') and sh._element.xpath('.//a:tailEnd[@type="triangle"]') for sh in slide.shapes),'IN21: human controls must not form a chronological arrow chain')
+        feeds=[sh for sh in slide.shapes if sh.name=='intake:feed']
+        require(feeds,'IN21: alternative triggers must feed agent work')
+        # A populated routed draft carries its claim limits visibly. Generic
+        # gallery steps remain explicit placeholders with example statuses.
+        if any(sh.name.startswith('route:') for sh in slide.shapes):
+            status=next(sh.text for sh in slide.shapes if sh.name=='flow:status-1')
+            require(status=='Design specified','B01: extraction execution is not step-verified')
+            require('Quote-draft workflow with human review' in t.replace('\n',' '),'B01: narrowed headline')
+            require('not in customer production' in t,'B01: maturity boundary')
+            require('PROPOSED\nHUMAN CONTROLS' in t,'B01: proposed controls')
+            require('Project RFQ' in t and 'Stock order' in t,'F03: branch labels')
     if sid in ('IN-23','IN-29','IN-30','IN-31'):
         for shape in slide.shapes:
             if shape.has_table:
@@ -87,11 +107,18 @@ def check_slide(slide,sid,d):
         expected=floating([r['value'] for r in steps],{j for j,r in enumerate(steps) if r['type']=='total'})
         for got,want in zip(chart_values(charts[0])[:2],expected):values_equal(got,want,'IN24 waterfall')
         require(charts[0].series[0]._element.xpath('./c:spPr/a:noFill'),'IN24 hidden base')
+        cats=[c.label.replace('\n',' ') for c in charts[0].plots[0].categories]
+        require('Outside technical coverage (40%)' in cats and 'Unrealized benefit (30%)' in cats,'F06: removed shares')
+        require('60% retained: 4,000 → 2,400' in t and '70% realized: 2,400 → 1,680' in t,'F06: retained-factor table')
     if sid=='IN-25':
         tables=matrix(slide);require(len(tables)==2,'IN25 marketplace separation')
         require('Marketplace' in tables[1][1][0] and 'EXCLUDED FROM EVERY TOTAL' in t,'IN25 marketplace excluded')
-    if sid=='IN-26':require(any(f.text.startswith('Proposed pilot package') for _,f in frames(slide)),'IN26 title')
+    if sid=='IN-26':
+        require(any(f.text.startswith('Proposed pilot package') for _,f in frames(slide)),'IN26 title')
+        require('Meter / billing basis' in t,'F07: meter versus billing')
+        require('Committed credits billed in advance; documents consume credits' in t and 'Committed D1 project-months billed in advance' in t,'F07: advance billing')
     if sid=='IN-27':
+        require('US$ / accepted output · independent of the pilot-package example' in t,'F05: independent economics')
         p=d['IN27']['per_accepted_output'];ch=charts[0]
         require(ch._chartSpace.xpath('.//c:barChart/c:grouping[@val="clustered"]'),'IN27 columns must be adjacent')
         require(len(ch.series)==1,'IN27: single series, three categories')
@@ -99,6 +126,7 @@ def check_slide(slide,sid,d):
         require(len(slide._element.xpath('.//p:cxnSp'))>=6,'IN27 editable brackets')
         require('$15.00' in t and '$1.80' in t,'IN27 bracket differences')
     if sid=='IN-28':
+        require('US$K · waterfall period not specified · payback is a separate illustration' in t,'F08: unspecified period and separate illustration')
         rows=d['IN28']['waterfall_k'];gp=sum(r['value'] for r in rows[:-1]);require(gp==522==rows[-1]['value'],'IN28 GP')
         expected=floating([r['value'] for r in rows],{0,len(rows)-1})
         for got,want in zip(chart_values(charts[0])[:2],expected):values_equal(got,want,'IN28 waterfall')
@@ -109,9 +137,15 @@ def check_slide(slide,sid,d):
         values_equal(chart_values(charts[1])[0],cum,'IN28 cumulative GP')
         values_equal(chart_values(charts[1])[1],[p['deploy_cost_k']]*len(cum),'IN28 deployment cost')
         require('month 13' in t and charts[1]._chartSpace.xpath('.//a:t[text()="Month 13"]'),'IN28 payback marked')
-    if sid=='IN-29':require('UNKNOWN' in t,'IN29 unknown renewals')
+    if sid=='IN-29':
+        require('All signed customers are shown. Later-cohort renewal status was not provided.' in t,'F09: no inferred maturity')
+        for row,source in zip(matrix(slide)[0][1:],d['IN29']):
+            if source['renewed'] is None:require(row[4]=='Not provided','F09: null is not zero or unmatured')
     if sid=='IN-30':
         require(len(matrix(slide)[0])==len(d['IN30'])+1,'IN30 evidence coverage')
+        require('Baseline rate' in t and 'With-context rate' in t,'F10: rate headers')
+        require(t.count('500 RFQs; metric to be defined')==2,'F10: missing success definition')
+        require('Illustrative rates; success definitions and evaluation rules remain to be specified' in t,'F10: rates are illustrative')
     if sid=='IN-31':
         ch=charts[0];require(ch._chartSpace.xpath('.//c:barChart/c:grouping[@val="percentStacked"]'),'IN31 100% stacked')
         values=chart_values(ch)
@@ -146,11 +180,32 @@ def probes(prs,d):
     def small(s):
         shape=next(s for s in s.shapes if s.has_text_frame and s.text==CHIP);shape.text_frame.paragraphs[0].runs[0].font.size=Pt(5)
     reject('IN-23','font floor',small)
+    def footer_small(s):
+        box=next(sh for sh in s.shapes if sh.has_text_frame and sh.text==FOOTER)
+        box.text_frame.paragraphs[0].runs[0].font.size=Pt(6.19)
+    reject('IN-23','footer below 14px',footer_small)
+    for literal in ('UNKNOWN','TBD'):
+        def raw_placeholder(s,value=literal):
+            box=next(sh for sh in s.shapes if sh.has_text_frame and sh.top/914400*128<680)
+            box.text_frame.paragraphs[0].runs[0].text=value
+        reject('IN-20','raw '+literal+' on real-content slide',raw_placeholder)
+
     def tracked(s):
         table=next(sh.table for sh in s.shapes if sh.has_table)
         run=table.cell(1,1).text_frame.paragraphs[0].runs[0]
         run._r.get_or_add_rPr().set('spc','200')
     reject('IN-23','tracked digits break numeric legibility',tracked)
+    if any(sh.name.startswith('route:') for sh in prs.slides[1].shapes):
+        def strengthen_extraction(s):
+            box=next(sh for sh in s.shapes if sh.name=='flow:status-1')
+            box.text_frame.paragraphs[0].runs[0].text='Demo environment'
+        reject('IN-21','B01 unsupported extraction execution',strengthen_extraction)
+    def chronological_controls(s):
+        sh=next(sh for sh in s.shapes if sh.name=='control:association')
+        from pptx.oxml.xmlchemy import OxmlElement
+        arrow=OxmlElement('a:tailEnd');arrow.set('type','triangle');sh._element.spPr.get_or_add_ln().append(arrow)
+    reject('IN-21','F03 chronological human controls',chronological_controls)
+
     def stacked(s):
         ch=next(s.chart for s in s.shapes if s.has_chart);g=ch._chartSpace.xpath('.//c:barChart/c:grouping')[0];old=g.get('val');g.set('val','stacked')
         return lambda:g.set('val',old)
